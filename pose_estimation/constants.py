@@ -28,7 +28,7 @@ CAMERA_CONSTANTS = {
     }
 }
 
-##apriltag positions. clockwise. 4 corner coordinates (xyz)
+##apriltag positions. counter-clockwise (lb, rb, rt, lt). 4 corner coordinates (xyz)
 ID_POS = {
     1: np.array([
         [],

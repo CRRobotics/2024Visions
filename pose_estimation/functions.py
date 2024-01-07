@@ -129,13 +129,8 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
                 cv.putText(frame, "id: %s"%(detection["id"]), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255,255, 0))
                 
-
-                if detection["id"] in [5, 6, 7, 8]:
-                    for coord in constants.CORNERS_AS_IN_FIELD_MAT_OTHER_WAY:
-                        objectpoints.append(coord + constants.ID_POS_NEW[detection["id"]]["center"])
-                else:
-                    for coord in constants.CORNERS_AS_IN_FIELD:
-                        objectpoints.append(coord + constants.ID_POS_NEW[detection["id"]]["center"])
+                for coord in constants.ID_POS[detection["id"]]:
+                    objectpoints.append(coord)
 
                 for corner in detection["lb-rb-rt-lt"]:
                     cornerpoints.append(corner)

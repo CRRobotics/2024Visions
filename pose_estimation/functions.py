@@ -116,7 +116,8 @@ def getPose(frame, cmtx, dist, detector, cameraid):
 
         for detection in detections:
             if detection["id"] in range(1, 16) and len(detection["lb-rb-rt-lt"]) == 4 and detection["margin"] > constants.MARGIN_THRESHOLD and allGoodCorners(detection["lb-rb-rt-lt"], w, h, constants.PIXEL_MARGIN):
-                
+                tagcounter += 1
+
                 corner_counter = 1
                 for x, y in detection["lb-rb-rt-lt"]:
                     corner = (int(x), int(y))
@@ -124,11 +125,13 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                     cv.circle(frame, corner, 5, (255,0,0), -1)
                     corner_counter += 1
 
+                """Drawing corners"""
                 cx, cy = detection["center"]
-                tagcounter += 1
                 cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
                 cv.putText(frame, "id: %s"%(detection["id"]), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255,255, 0))
                 
+
+                """Updating objectpoints and cornerpoints lists."""
                 for coord in constants.ID_POS[detection["id"]]:
                     objectpoints.append(coord)
 

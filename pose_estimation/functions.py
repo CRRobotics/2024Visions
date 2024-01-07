@@ -10,9 +10,30 @@ from time import sleep
 import csv
 
 
+"""CAMERA FUNCTIONS-----------------------------------------------"""
+def waitForCam(path):
+    """Waits until there is a camera available at `path`. This is to ensure that cameras that are unplugged can be plugged back in and not interrupt the script."""
+    while True:
+        cap = cv.VideoCapture(path)
+        cap:cv.VideoCapture
+        cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
+        cap.set(cv.CAP_PROP_FPS, 20)
+        if cap.isOpened():
+            print("open")
+            return cap
+        else:
+            sleep(0.001)
+
+def shrinkFrame(frame):
+    """Returns a frame that is shrinked. Only works when NON-HEADLESS"""
+    kernel = np.ones((2,2),np.float32)/2
+    dst = cv.filter2D(frame,-1,kernel)
+    return dst[::2,::2]
 
 
-"""NETWORK TABLES FUNCTIONS-----------------------------"""
+
+"""NETWORK TABLES AND LOGGING FUNCTIONS-----------------------------"""
 def networkConnect() -> any:
     """Copied from documentation. Establishes a connection to 10.6.39.2"""
     cond = threading.Condition()
@@ -42,7 +63,21 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
     table.putNumber("ntags", ntags)
     table.putNumber("time", time)
 
-    
+def logPose(camid, rx, ry, rt, time):
+    """Logs camid, rx, ry, rt, and time of a pose."""
+    with open("/home/crr/2024Visions/pose_estimation/log.csv", "a+", newline="") as log:
+        c = csv.writer(log)
+        c.writerow(
+            [camid, rx, ry, rt, time]
+        )
+
+
+
+
+
+
+
+
 """APRILTAG FUNTIONS -----------------------------------"""
 def getDetector():
     """Returns an Apriltag Detector"""
@@ -188,29 +223,4 @@ def getRobotVals(ay, cameraid, px, py):
     robocoords = np.dot(transformationmatrix, robotcoordsRelativetocam) #what we learned in visions training
     return robocoords, robotheta
 
-def waitForCam(path):
-    """Waits until there is a camera available at `path`. This is to ensure that cameras that are unplugged can be plugged back in and not interrupt the script."""
-    while True:
-        cap = cv.VideoCapture(path)
-        cap:cv.VideoCapture
-        cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
-        cap.set(cv.CAP_PROP_FPS, 20)
-        if cap.isOpened():
-            print("open")
-            return cap
-        else:
-            sleep(0.001)
 
-def logStuff(camid, rx, ry, rt, time):
-    with open("/home/crr/2024Visions/pose_estimation/log.csv", "a+", newline="") as log:
-        c = csv.writer(log)
-        c.writerow(
-            [camid, rx, ry, rt, time]
-        )
-
-def shrinkFrame(frame):
-    """Returns a frame that is shrinked. Only works when NON-HEADLESS"""
-    kernel = np.ones((2,2),np.float32)/2
-    dst = cv.filter2D(frame,-1,kernel)
-    return dst[::2,::2]

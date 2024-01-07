@@ -28,7 +28,7 @@ def process_frame(cameraid, path, nt, headless = False):
             robotheta = 63900
             rx = 63900
             ry = 63900
-            logStuff(cameraid, rx, ry, robotheta, current_time)
+            logPose(cameraid, rx, ry, robotheta, current_time)
             pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
 
             print("failed to get image from camid ", cameraid)
@@ -42,7 +42,7 @@ def process_frame(cameraid, path, nt, headless = False):
             robotheta = pose_calc["angle"]
             rx, ry, _ = pose_calc["pos"]
             tags = pose_calc["tags"]
-            logStuff(cameraid, rx, ry, robotheta, current_time)
+            logPose(cameraid, rx, ry, robotheta, current_time)
             pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
 
         if not headless: cv.imshow(f"CAMID{cameraid}:", shrinkFrame(frame1))

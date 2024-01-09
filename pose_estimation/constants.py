@@ -1,13 +1,13 @@
 import numpy as np
 
-TAG_FAMILY = "tag16h5"
+TAG_FAMILY = "tag36h11"
 MARGIN_THRESHOLD = 41
 PIXEL_MARGIN = 7
 
 SERVER = "10.6.39.2"
 
 CAMERA_CONSTANTS = {
-    1: {
+    0: {
         "matrix":np.array([
         [697.44966690936860, 0.0, 325.23918869505667],
         [0.0, 697.44966690936860, 697.44966690936860],
@@ -20,6 +20,25 @@ CAMERA_CONSTANTS = {
             0,
             0,
             -0.21377372818194756
+            ]
+        ]),
+        "yc": 0, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "thetar": 0 # Rotation to center of robot.
+    },
+    2: {
+        "matrix":np.array([
+        [1056.7997734244436, 0.0, 630.87407868060438],
+        [0.0, 1056.7997734244436, 421.30564581242407],
+        [0.0, 0.0, 1.0]
+        ]),
+        "distortion":np.array([
+            [
+            0.0071127134351176777,
+            -0.12054203331230241,
+            0,
+            0,
+            0.0071234992522144713
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)

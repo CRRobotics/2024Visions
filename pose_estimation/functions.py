@@ -115,7 +115,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
         margins = []
 
         for detection in detections:
-            if detection["id"] in range(1, 16) and len(detection["lb-rb-rt-lt"]) == 4 and detection["margin"] > constants.MARGIN_THRESHOLD and allGoodCorners(detection["lb-rb-rt-lt"], w, h, constants.PIXEL_MARGIN):
+            if detection["id"] in range(1, 17) and len(detection["lb-rb-rt-lt"]) == 4 and detection["margin"] > constants.MARGIN_THRESHOLD and allGoodCorners(detection["lb-rb-rt-lt"], w, h, constants.PIXEL_MARGIN):
                 tagcounter += 1
 
                 corner_counter = 1
@@ -128,7 +128,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 """Drawing corners"""
                 cx, cy = detection["center"]
                 cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
-                cv.putText(frame, "id: %s"%(detection["id"]), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 1, (255,255, 0))
+                cv.putText(frame, "id: %s"%(detection["id"]), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 2, (255,255, 0))
                 
 
                 """Updating objectpoints and cornerpoints lists."""
@@ -183,9 +183,9 @@ def getPose(frame, cmtx, dist, detector, cameraid):
             toreturn["margins"] = margins
             rx, ry, _ = robocoords
 
-            cv.putText(frame, " PX: %.4f  PY: %.4f  PZ: %.4f"%(px, py, pz), (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255))
-            cv.putText(frame, " ZTHETA: %.4f"%(ztheta), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255))
-            cv.putText(frame, " RX: %.4f  RY: %.4f RTHETA: %.4f"%(rx, ry, math.degrees(robotheta)), (50, 150), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255))
+            cv.putText(frame, " PX: %.4f  PY: %.4f  PZ: %.4f"%(px, py, pz), (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            cv.putText(frame, " ZTHETA: %.4f"%(ztheta), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
+            cv.putText(frame, " RX: %.4f  RY: %.4f RTHETA: %.4f"%(rx, ry, math.degrees(robotheta)), (50, 150), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
             return toreturn
 
     """IF DOES NOT DETECT ANYTHING, RETURN PLACEHOLDER"""

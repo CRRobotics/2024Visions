@@ -31,8 +31,8 @@ CAMERA_CONSTANTS = {
 ##apriltag positions. counter-clockwise (lb, rb, rt, lt). 4 corner coordinates (xyz)
 ID_POS = {
     1: np.array([
-        [],
-        [],
+        [15.14725452],
+        [0.3409222487],
         [],
         []
     ]),

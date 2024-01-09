@@ -9,22 +9,22 @@ SERVER = "10.6.39.2"
 CAMERA_CONSTANTS = {
     1: {
         "matrix":np.array([
-        [1097.3387663520302, 0.0, 614.1053531279227],
-        [0.0, 1090.798847106442, 429.49732257606695],
+        [697.44966690936860, 0.0, 325.23918869505667],
+        [0.0, 697.44966690936860, 697.44966690936860],
         [0.0, 0.0, 1.0]
         ]),
         "distortion":np.array([
             [
-            0.11689586201295843,
-            -0.5199784733199033,
-            -0.0004565757059130622,
-            -0.008706649747024026,
-            1.0476502704411934
+            0.11744612537697446,
+            -0.29928725586362032,
+            0,
+            0,
+            -0.21377372818194756
             ]
         ]),
-        "yc": 0.04445, #Y coordinate to center of robot. (meters I believe)
-        "xc": -0.2667, #X coordinate to center of robot. (meters I believe)
-        "thetar": 57 # Rotation to center of robot.
+        "yc": 0, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "thetar": 0 # Rotation to center of robot.
     }
 }
 

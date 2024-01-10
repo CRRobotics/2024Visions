@@ -81,7 +81,7 @@ def logPose(camid, rx, ry, rt, time):
 """APRILTAG FUNCTIONS -----------------------------------"""
 def getDetector():
     """Returns an Apriltag Detector"""
-    aprilobj = apriltag(constants.TAG_FAMILY, maxhamming=0, blur = 0.1)
+    aprilobj = apriltag(constants.TAG_FAMILY, maxhamming=0, blur = 0.1, decimate=1)
     return aprilobj
 
 

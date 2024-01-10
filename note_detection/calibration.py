@@ -7,7 +7,7 @@ import helper_functions as f
 image = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1555.jpeg"))
 
 image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-with open("note_detection\\constants.yml", "r") as fp:
+with open(os.path.join("note_detection", "constants.yml"), "r") as fp:
     params = safe_load(fp)
 print(params)
 lower = np.array([0, 0, 0])
@@ -43,8 +43,8 @@ def updateValueMax(value):
     mask = cv2.inRange(image, lower, upper)
     cv2.imshow("Mask", f.shrinkFrame(mask, 3))
 
-image = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
-cv2.imshow("Test", f.shrinkFrame(image, 3))
+toDisplay = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
+cv2.imshow("Test", f.shrinkFrame(toDisplay, 3))
 cv2.namedWindow("Filter")
 cv2.createTrackbar("Hue min", "Filter", 0, params["HUE"], updateHueMin)
 cv2.createTrackbar("Hue max", "Filter", params["HUE"], params["HUE"], updateHueMax)
@@ -58,5 +58,5 @@ save = input("Save values? (y/n) ")
 if save == "y":
     params["HSV_LOWER"] = lower.tolist()
     params["HSV_UPPER"] = upper.tolist()
-    with open("note_detection\\constants.yml", "w") as fp:
+    with open(os.path.join("note_detection", "constants.yml"), "w") as fp:
         safe_dump(params, fp)

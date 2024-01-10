@@ -94,7 +94,6 @@ def allGoodCorners(l:list, framewidth:int, frameheight:int, margin:int) -> bool:
     """Detects corner clipping at the corner of a frame. Invalidates corners that are `margin` pixels away from the corner."""
     for corner in l:
         x, y = corner
-        print(x, y)
         if x < margin or x > framewidth - margin or y < margin or y > frameheight - margin:
             return False
     return True

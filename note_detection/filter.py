@@ -44,7 +44,7 @@ while True:
         if len(hull) < 5: continue # fitEllipse needs at least 5 points
         #print("Found contour")
         ellipse = cv2.fitEllipse(hull)
-        print(ellipse)
+        #print(ellipse)
         newMajor = ellipse[1][1] * 10 / 12 # Shrink the ellipse to be at roughly the center of the torus
         newMinor = ellipse[1][0] - ellipse[1][1] * 2 / 12 # Removing the same amount from the minor axis as the major axis
         ellipse = list(ellipse)
@@ -54,8 +54,12 @@ while True:
         # Find the angle to the ellipse
         major = ellipse[1][1]
         minor = ellipse[1][0]
+        angle = ellipse[2] # The clockwise angle from a horizontal line to the minor axis
         radiansPerPixelHeight = math.radians(params["FOV_HEIGHT_DEGREES"] / params["FOV_HEIGHT_PIX"])
-        ellipseAngle = minor * radiansPerPixelHeight
+        radiansPerPixelWidth = math.radians(params["FOV_WIDTH_DEGREES"] / params["FOV_WIDTH_PIX"])
+        ellipseAngleHeight = minor * math.sin(math.radians(angle)) * radiansPerPixelHeight
+        ellipseAngleWidth = minor * abs(math.cos(math.radians(angle))) * radiansPerPixelWidth
+        ellipseAngle = math.sqrt(ellipseAngleHeight ** 2 + ellipseAngleWidth ** 2)
         minorLengthRelativeToDiameter = minor / major
         angleFromCam = (math.pi - ellipseAngle) / 2 - math.asin(minorLengthRelativeToDiameter * math.sin((math.pi + ellipseAngle) / 2))
 

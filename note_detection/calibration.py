@@ -19,7 +19,9 @@ image = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1555.jpe
 #image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 lower = np.array([0, 0, 0])
 upper = np.array([params["HUE"], params["SATURATION"], params["VALUE"]])
-mask = cv2.inRange(image, lower, upper)
+blurSize = 1
+blurred = cv2.medianBlur(image, blurSize * 2 + 1)
+mask = cv2.inRange(blurred, lower, upper)
 
 def updateHueMin(value):
     lower[0] = value
@@ -39,9 +41,14 @@ def updateValueMin(value):
 def updateValueMax(value):
     upper[2] = value
 
+def updateBlurSize(value):
+    global blurSize
+    blurSize = value
+
 def saveValues(value):
     params["HSV_LOWER"] = lower.tolist()
     params["HSV_UPPER"] = upper.tolist()
+    params["BLUR_SIZE"] = blurSize
     with open(os.path.join("note_detection", "constants.yml"), "w") as fp:
         safe_dump(params, fp)
 
@@ -52,6 +59,7 @@ cv2.createTrackbar("Saturation min", "Filter", 0, params["SATURATION"], updateSa
 cv2.createTrackbar("Saturation max", "Filter", params["SATURATION"], params["SATURATION"], updateSaturationMax)
 cv2.createTrackbar("Value min", "Filter", 0, params["VALUE"], updateValueMin)
 cv2.createTrackbar("Value max", "Filter", params["VALUE"], params["VALUE"], updateValueMax)
+cv2.createTrackbar("Blur", "Filter", 0, 20, updateBlurSize)
 cv2.createTrackbar("Slide to save", "Filter", 0, 1, saveValues)
 
 while True:
@@ -63,8 +71,9 @@ while True:
         cap = f.waitForCam(0)
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
 
-    toDisplay = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
-    mask = cv2.inRange(image, lower, upper)
+    blurred = cv2.medianBlur(image, blurSize * 2 + 1)
+    toDisplay = cv2.cvtColor(blurred, cv2.COLOR_HSV2BGR)
+    mask = cv2.inRange(blurred, lower, upper)
     cv2.imshow("Test", f.shrinkFrame(toDisplay, 2))
     cv2.imshow("Mask", f.shrinkFrame(mask, 2))
     cv2.waitKey(1)

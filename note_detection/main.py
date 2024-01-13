@@ -22,10 +22,11 @@ while True:
     convexHull = findNoteContours(image, True)
     ellipses = fitEllipsesToNotes(convexHull)
     angles = computeEllipseAnglesFromCam(ellipses)
-    displayAngles = [round(math.degrees(angle), 1) for angle in angles]
+    distances = computeNoteDistancesFromCam(angles)
+    displayText = [str(round(math.degrees(angles[i]), 1)) + ", " + str(round(distances[i], 1)) for i in range(len(angles))]
+    image = drawEllipses(ellipses, displayText, image)
     # print(image)
-    image = drawEllipses(ellipses, angles, image)
 
     image = cv2.drawContours(image, convexHull, -1, (0, 0, 255), 10)
-    cv2.imshow("Test", f.shrinkFrame(image, 2))
+    cv2.imshow("Frame", f.shrinkFrame(image, 2))
     cv2.waitKey(1)

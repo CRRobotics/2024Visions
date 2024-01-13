@@ -23,3 +23,11 @@ def computeEllipseAnglesFromCam(ellipses):
         angleFromCam = (math.pi - ellipseAngle) / 2 - math.asin(minorLengthRelativeToDiameter * math.sin((math.pi + ellipseAngle) / 2))
         angles.append(angleFromCam)
     return angles
+
+def computeNoteDistancesFromCam(angles):
+    """Uses the angle of a note from the camera to calculate its distance, assuming it is on the floor"""
+    distances = []
+    for angle in angles:
+        distance = params["CAMERA_HEIGHT_IN"] * math.tan(angle)
+        distances.append(distance)
+    return distances

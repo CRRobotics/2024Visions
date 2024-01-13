@@ -18,7 +18,8 @@ sampleImage = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_15
 def findNoteContours(image = sampleImage, displayMask = False):
     """Filters the image for notes and returns a list of convexHulls where they are"""
     image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    mask = cv2.inRange(image, lower, upper)
+    blurred = cv2.medianBlur(image, params["BLUR_SIZE"] * 2 + 1)
+    mask = cv2.inRange(blurred, lower, upper)
     if displayMask:
         cv2.imshow("Mask", f.shrinkFrame(mask, 2))
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -57,8 +58,7 @@ def drawEllipses(ellipses, textToDisplay, image = sampleImage):
         except:
             # Errors this catches: ellipse has infinity in it, ellipse is zero size, center doesn't work for text
             print("Can't display ellipse")
-        finally:
-            return image
+    return image
 
 """
 cap = f.waitForCam(0)

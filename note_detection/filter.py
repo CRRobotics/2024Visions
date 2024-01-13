@@ -13,8 +13,54 @@ lower = np.array(params["HSV_LOWER"])
 #print(upper)
 
 # Read the image and convert to HSV
-image = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1559.jpeg"))
+sampleImage = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1559.jpeg"))
 
+def findNoteContours(image = sampleImage, displayMask = False):
+    """Filters the image for notes and returns a list of convexHulls where they are"""
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(image, lower, upper)
+    if displayMask:
+        cv2.imshow("Mask", f.shrinkFrame(mask, 2))
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return []
+    largestContour = max(contours, key=lambda x: cv2.contourArea(x))
+    convexHull = [cv2.convexHull(largestContour)]
+
+    # Add in more filtering here
+
+    return convexHull
+
+def fitEllipsesToNotes(convexHull):
+    ellipses = []
+    for hull in convexHull:
+        if len(hull) < 5: continue # fitEllipse needs at least 5 points
+        ellipse = cv2.fitEllipse(hull)
+        newMajor = ellipse[1][1] * (1 - params["NOTE_THICKNESS_IN"] / params["NOTE_OUTER_RADIUS_IN"]) # Shrink the ellipse to be at roughly the center of the torus
+        newMinor = ellipse[1][0] - ellipse[1][1] * params["NOTE_THICKNESS_IN"] / params["NOTE_OUTER_RADIUS_IN"] # Removing the same amount from the minor axis as the major axis
+        ellipse = list(ellipse)
+        ellipse[1] = (newMinor, newMajor)
+        ellipse = tuple(ellipse)
+        ellipses.append(ellipse)
+    
+    return ellipses
+
+def drawEllipses(ellipses, textToDisplay, image = sampleImage):
+    """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers"""
+    for i in range(len(ellipses)):
+        ellipse = ellipses[i]
+        text = textToDisplay[i]
+        try:
+            ellipseCenter = tuple([int(coord) for coord in ellipse[0]])
+            image = cv2.ellipse(image, ellipse, (255, 255, 0), 20)
+            image = cv2.putText(image, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+        except:
+            # Errors this catches: ellipse has infinity in it, ellipse is zero size, center doesn't work for text
+            print("Can't display ellipse")
+        finally:
+            return image
+
+"""
 cap = f.waitForCam(0)
 #print("Got here")
 cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
@@ -33,7 +79,7 @@ while True:
     mask = cv2.inRange(image, lower, upper)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        continue;
+        continue
     largestContour = max(contours, key=lambda x: cv2.contourArea(x))
     convexHull = [cv2.convexHull(largestContour)]
     # convexHull = [cv2.convexHull(contour) for contour in contours]
@@ -50,8 +96,8 @@ while True:
         #print("Found contour")
         ellipse = cv2.fitEllipse(hull)
         #print(ellipse)
-        newMajor = ellipse[1][1] * 10 / 12 # Shrink the ellipse to be at roughly the center of the torus
-        newMinor = ellipse[1][0] - ellipse[1][1] * 2 / 12 # Removing the same amount from the minor axis as the major axis
+        newMajor = ellipse[1][1] * (1 - params["NOTE_THICKNESS_IN"] / params["NOTE_OUTER_RADIUS_IN"]) # Shrink the ellipse to be at roughly the center of the torus
+        newMinor = ellipse[1][0] - ellipse[1][1] * params["NOTE_THICKNESS_IN"] / params["NOTE_OUTER_RADIUS_IN"] # Removing the same amount from the minor axis as the major axis
         ellipse = list(ellipse)
         ellipse[1] = (newMinor, newMajor)
         ellipse = tuple(ellipse)
@@ -81,3 +127,4 @@ while True:
     cv2.imshow("Test", f.shrinkFrame(image, 2))
     cv2.imshow("Mask", f.shrinkFrame(mask, 2))
     cv2.waitKey(1)
+"""

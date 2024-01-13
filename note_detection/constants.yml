@@ -21,11 +21,17 @@ FOV_HEIGHT_PIX: 720
 FOV_WIDTH_DEGREES: 50
 FOV_WIDTH_PIX: 1280
 HSV_LOWER:
+# - 0
+# - 0
+# - 0
 - 0
-- 127
-- 141
+- 156
+- 154
 HSV_UPPER:
-- 11
+# - 179
+# - 255
+# - 255
+- 7
 - 255
 - 255
 HUE: 179

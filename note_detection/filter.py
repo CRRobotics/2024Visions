@@ -32,10 +32,15 @@ while True:
     # Find orange contours
     mask = cv2.inRange(image, lower, upper)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    convexHull = [cv2.convexHull(contour) for contour in contours]
+    if not contours:
+        continue;
+    largestContour = max(contours, key=lambda x: cv2.contourArea(x))
+    convexHull = [cv2.convexHull(largestContour)]
+    # convexHull = [cv2.convexHull(contour) for contour in contours]
     image = cv2.cvtColor(image, cv2.COLOR_HSV2BGR)
 
     # Add in more filtering here
+
 
     # Fit ellipses to contours
     ellipses = []

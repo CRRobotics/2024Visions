@@ -1,7 +1,5 @@
 """Functions that help make the pipeline more readable"""
-from apriltag import apriltag
-
-
+import pyapriltags
 
 import cv2 as cv
 import numpy as np
@@ -84,7 +82,7 @@ def logPose(camid, rx, ry, rt, time):
 """APRILTAG FUNCTIONS -----------------------------------"""
 def getDetector():
     """Returns an Apriltag Detector"""
-    aprilobj = apriltag(constants.TAG_FAMILY, maxhamming=0, blur = 0.1, decimate=1)
+    aprilobj = pyapriltags.Detector()
     return aprilobj
 
 
@@ -117,34 +115,36 @@ def getPose(frame, cmtx, dist, detector, cameraid):
         margins = []
 
         for detection in detections:
-            if detection["id"] in range(1, 17) and len(detection["lb-rb-rt-lt"]) == 4 and detection["margin"] > constants.MARGIN_THRESHOLD and allGoodCorners(detection["lb-rb-rt-lt"], w, h, constants.PIXEL_MARGIN):
+
+            if detection.tag_id in range(1, 17) and len(detection.corners) == 4 and detection.decision_margin > constants.MARGIN_THRESHOLD and allGoodCorners(detection.corners, w, h, constants.PIXEL_MARGIN):
                 tagcounter += 1
 
                 corner_counter = 1
-                for x, y in detection["lb-rb-rt-lt"]:
+                for x, y in detection.corners:
                     corner = (int(x), int(y))
                     cv.putText(frame, f"{corner_counter}", corner, cv.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0))
                     cv.circle(frame, corner, 5, (255,0,0), -1)
                     corner_counter += 1
+                    cornerpoints.append([x, y])
 
                 """Drawing corners"""
-                cx, cy = detection["center"]
+                cx, cy = detection.center
                 cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
-                cv.putText(frame, "id: %s"%(detection["id"]), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 2, (255,255, 0))
+                cv.putText(frame, "id: %s"%(detection.tag_id), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 2, (255,255, 0))
                 
 
                 """Updating objectpoints and cornerpoints lists."""
-                for coord in constants.ID_POS[detection["id"]]:
+                for coord in constants.ID_POS[detection.tag_id]:
                     objectpoints.append(coord)
-
-                for corner in detection["lb-rb-rt-lt"]:
-                    cornerpoints.append(corner)
                 
-                margins.append(detection["margin"])
+                margins.append(detection.decision_margin)
 
         if objectpoints and cornerpoints:
             objectpoints = np.array(objectpoints)
             cornerpoints = np.array(cornerpoints)
+
+            print(objectpoints)
+            print(cornerpoints)
 
             mmat, rvec, tvec = cv.solvePnP(
                 objectpoints, 

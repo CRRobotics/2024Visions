@@ -82,7 +82,13 @@ def logPose(camid, rx, ry, rt, time):
 """APRILTAG FUNCTIONS -----------------------------------"""
 def getDetector():
     """Returns an Apriltag Detector"""
-    aprilobj = pyapriltags.Detector()
+    aprilobj = pyapriltags.Detector(
+        nthreads=constants.NTHREADS, 
+        quad_decimate=constants.QUAD_DECIMATE, 
+        quad_sigma = constants.QUAD_SIGMA,
+        refine_edges = constants.REFINE_EDGES,
+        decode_sharpening= constants.DECODE_SHARPENING
+        )
     return aprilobj
 
 

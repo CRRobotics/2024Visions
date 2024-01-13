@@ -23,6 +23,7 @@ def process_frame(cameraid, path, nt, headless = False):
     while True:
         current_time = datetime.now().timestamp()
         success, frame1 = cap.read()
+        frame1 = cv.blur(frame1, (5,5))
 
         if not success:
             robotheta = 63900

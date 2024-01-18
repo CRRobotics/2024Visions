@@ -89,6 +89,25 @@ CAMERA_CONSTANTS = {
         "yc": 0, #Y coordinate to center of robot. (meters I believe)
         "xc": 0, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
+    },
+    8: {
+        "matrix":np.array([
+        [1.0556714314149651e+03, 0.0, 6.2850650510683784e+02],
+        [0.0, 1.0556714314149651e+03, 4.1573899729130790e+02],
+        [0.0, 0.0, 1.0]
+        ]),
+        "distortion":np.array([
+            [
+            8.6024487017995532e-02,
+            -1.2652086185680320e-01,
+            0,
+            0,
+            7.0161275193120931e-02
+            ]
+        ]),
+        "yc": 0, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "thetar": 0 # Rotation to center of robot.
     }
 }
 

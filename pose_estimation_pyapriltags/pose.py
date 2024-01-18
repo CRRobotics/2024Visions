@@ -65,7 +65,7 @@ if __name__ == "__main__":
     t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.1:1.0-video-index0"),nt,headless])
 
     cam_lst = [
-        t3,
+        #t3,
         t4
     ]
 

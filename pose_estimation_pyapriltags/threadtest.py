@@ -22,7 +22,8 @@ def process_frame(cameraid, path, nt, headless = False):
 
         if _:
             print(f'{cameraid}yesworks')
-        cv.waitKey(1)
+            
+
 
         
 
@@ -34,23 +35,23 @@ if __name__ == "__main__":
     nt = None
     print("Connected to networktables")
 
-    #t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.3:1.0-video-index0"),nt,headless])
-    #t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.4:1.0-video-index0"),nt,headless])
+    """t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.3:1.0-video-index0"),nt,headless])
+    t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.4:1.0-video-index0"),nt,headless])"""
     t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.2:1.0-video-index0"),nt,headless])
     t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.1:1.0-video-index0"),nt,headless])
 
-    cam_lst = [
-        t3,
-        t4
-    ]
+    """t1.start()
+    t1.join()
+    t2.start()
+    t2.join()"""
+    t3.start()
+    t3.join()
+    t4.start()
 
-    for cam in cam_lst:
-        cam.start()
-        
-
-        
-
+    t4.join()
+    
 
     # cam.join() NEVER DO THIS!
         
     print("Done!")
+    

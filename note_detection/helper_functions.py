@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from time import sleep
+import math
 from yaml import safe_load
 import os
 with open(os.path.join("note_detection", "constants.yml"), "r") as fp:
@@ -26,3 +27,12 @@ def waitForCam(path):
         else:
             sleep(0.001)
             print("Waiting")
+
+def pixelsToRadians(pixelLength, angle):
+    """Converts a line of pixelLength pixels rotated clockwise from a horizontal line by angle degrees into an angle in radians based on the camera's FOV."""
+    radiansPerPixelHeight = math.radians(params["FOV_HEIGHT_DEGREES"] / params["FOV_HEIGHT_PIX"])
+    radiansPerPixelWidth = math.radians(params["FOV_WIDTH_DEGREES"] / params["FOV_WIDTH_PIX"])
+    lineAngleHeight = pixelLength * math.sin(math.radians(angle)) * radiansPerPixelHeight
+    lineAngleWidth = pixelLength * abs(math.cos(math.radians(angle))) * radiansPerPixelWidth
+    lineAngle = math.sqrt(lineAngleHeight ** 2 + lineAngleWidth ** 2)
+    return lineAngle

@@ -22,8 +22,12 @@ while True:
     convexHull = findNoteContours(image, True)
     ellipses = fitEllipsesToNotes(convexHull)
     angles = computeEllipseAnglesFromCam(ellipses)
-    distances = computeNoteDistancesFromCam(angles)
-    displayText = [str(round(math.degrees(angles[i]), 1)) + ", " + str(round(distances[i], 1)) for i in range(len(angles))]
+    centers = [ellipse[0] for ellipse in ellipses]
+    distances0 = computeNoteDistancesFromAngles(angles)
+    distances1 = computeNoteDistancesFromMajorAxes(ellipses)
+    distances2 = computeNoteDistancesFromCenters(centers)
+    displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
+    # displayText = [str(ellipse[0]) for ellipse in ellipses]
     image = drawEllipses(ellipses, displayText, image)
     # print(image)
 

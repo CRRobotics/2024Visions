@@ -9,19 +9,29 @@ import os
 from datetime import datetime
 print("We out")
 
-
+capLock = threading.Lock()
 
 def process_frame(cameraid, path, nt, headless = False):
     cap = waitForCam(path)
-
-    detector = getDetector()
+    cap.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    #detector = getDetector()
     print("got thread for ", cameraid)
 
     while 1:
-        _, img = cap.read()
+        # capLock.acquire()
+        if cap.isOpened():
+            _, img = cap.read()
+            # cv.imshow(f"cam{cameraid}", img)
+
+
+        else :
+            print(f"{cameraid} failed")
+        # capLock.release()
 
         if _:
             print(f'{cameraid}yesworks')
+        print(f'{cameraid}running')
+        cv.waitKey(1)
             
 
 
@@ -44,13 +54,9 @@ if __name__ == "__main__":
     t1.join()
     t2.start()
     t2.join()"""
-    t3.start()
-    t3.join()
     t4.start()
-
-    t4.join()
+    t3.start()
     
-
     # cam.join() NEVER DO THIS!
         
     print("Done!")

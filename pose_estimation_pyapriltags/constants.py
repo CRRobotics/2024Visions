@@ -6,7 +6,7 @@ DECODE_SHARPENING=.25
 REFINE_EDGES=1
 QUAD_DECIMATE = 1
 QUAD_SIGMA=0
-NTHREADS=8
+NTHREADS=1
 
 
 PIXEL_MARGIN = 7
@@ -65,6 +65,25 @@ CAMERA_CONSTANTS = {
             0,
             0,
             -3382.3506940723159
+            ]
+        ]),
+        "yc": 0, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "thetar": 0 # Rotation to center of robot.
+    },
+    6: {
+        "matrix":np.array([
+        [1135.3824875157502, 0.0, 636.54371424379406],
+        [0.0, 1135.3824875157502, 429.76526535317402],
+        [0.0, 0.0, 1.0]
+        ]),
+        "distortion":np.array([
+            [
+            .085351855261617510,
+            -.13424455518051401,
+            0,
+            0,
+            .064126046739839987
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)

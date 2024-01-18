@@ -57,6 +57,8 @@ def networkConnect() -> any:
 
 def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
     """Pushes theta, rx, ry, ntags, and time values to the networktable. TableName should be the CameraID"""
+    if networkinstance is None:
+        return
     table = networkinstance.getTable(tablename)
     table.putNumber("theta", theta)
     table.putNumber("rx", rx)

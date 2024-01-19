@@ -29,7 +29,7 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False):
             robotheta = 63900
             rx = 63900
             ry = 63900
-            logPose(cameraid, rx, ry, robotheta, current_time)
+            logPose(cameraid, rx, ry, math.degrees(robotheta), current_time)
             pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
 
             print("failed to get image from camid ", cameraid)
@@ -43,10 +43,19 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False):
             robotheta = pose_calc["angle"]
             rx, ry, _ = pose_calc["pos"]
             tags = pose_calc["tags"]
-            logPose(cameraid, rx, ry, robotheta, current_time)
+            logPose(cameraid, rx, ry,  math.degrees(robotheta), current_time)
             pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
 
-        if not headless and show_select: cv.imshow(f"CAMID{cameraid}:", shrinkFrame(frame1))
+        if not headless or show_select: cv.imshow(f"CAMID{cameraid}:", frame1)
+        
+
+
+        k = cv.waitKey(1)
+        if k == 's':
+            current_datetime = datetime.now()
+            filename = "/home/crr/2024Visions/pose_estimation_pyapriltags/imgs/{}.jpg".format(path, current_datetime.strftime("%Y%m%d_%H%M%S"))
+            print("saved image ",filename)
+            cv.imwrite(filename, frame1)
         cv.waitKey(1)
 
         
@@ -62,12 +71,12 @@ if __name__ == "__main__":
     t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.3:1.0-video-index0"),nt,headless, False])
     t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.4:1.0-video-index0"),nt,headless, False])
     t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.2:1.0-video-index0"),nt,headless, False])
-    t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.1:1.0-video-index0"),nt,headless, False])
+    t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.1:1.0-video-index0"),nt,headless, True])
 
     cam_lst = [
-        t1,
-        t2,
-        t3,
+        #t1,
+        #t2,
+        #t3,
         t4,
     ]
 

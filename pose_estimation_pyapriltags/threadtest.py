@@ -21,7 +21,7 @@ def process_frame(cameraid, path, nt, headless = False):
         # capLock.acquire()
         if cap.isOpened():
             _, img = cap.read()
-            # cv.imshow(f"cam{cameraid}", img)
+            cv.imshow(f"cam{cameraid}", img)
 
 
         else :
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     t2.start()
     t2.join()"""
     t4.start()
-    t3.start()
+
     
     # cam.join() NEVER DO THIS!
         

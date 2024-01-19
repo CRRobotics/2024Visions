@@ -2,3 +2,4 @@ pose_estimation/log.csv
 *.pyc
 __pycache__
 *.csv
+*.jpg

@@ -68,7 +68,7 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
 
 def logPose(camid, rx, ry, rt, time):
     """Logs camid, rx, ry, rt, and time of a pose."""
-    with open("/home/crr/2024Visions/pose_estimation/log.csv", "a+", newline="") as log:
+    with open("/home/crr/2024Visions/pose_estimation_pyapriltags/log.csv", "a+", newline="") as log:
         c = csv.writer(log)
         c.writerow(
             [camid, rx, ry, rt, time]
@@ -151,8 +151,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
             objectpoints = np.array(objectpoints)
             cornerpoints = np.array(cornerpoints)
 
-            print(objectpoints)
-            print(cornerpoints)
+
 
             mmat, rvec, tvec = cv.solvePnP(
                 objectpoints, 

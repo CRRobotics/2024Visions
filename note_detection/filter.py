@@ -48,17 +48,18 @@ def fitEllipsesToNotes(convexHull):
 
 def drawEllipses(ellipses, textToDisplay, image = sampleImage):
     """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers"""
+    toReturn = image
     for i in range(len(ellipses)):
         ellipse = ellipses[i]
         text = textToDisplay[i]
         try:
             ellipseCenter = tuple([int(coord) for coord in ellipse[0]])
-            image = cv2.ellipse(image, ellipse, (255, 255, 0), 20)
-            image = cv2.putText(image, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+            toReturn = cv2.ellipse(toReturn, ellipse, (255, 255, 0), 20)
+            toReturn = cv2.putText(toReturn, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
         except:
             # Errors this catches: ellipse has infinity in it, ellipse is zero size, center doesn't work for text
             print("Can't display ellipse")
-    return image
+    return toReturn
 
 """
 cap = f.waitForCam(0)

@@ -4,6 +4,8 @@ from time import sleep
 import math
 from yaml import safe_load
 import os
+from pos_math import *
+from filter import *
 with open(os.path.join("note_detection", "constants.yml"), "r") as fp:
     params = safe_load(fp)
 
@@ -36,3 +38,19 @@ def pixelsToRadians(pixelLength, angle):
     lineAngleWidth = pixelLength * abs(math.cos(math.radians(angle))) * radiansPerPixelWidth
     lineAngle = math.sqrt(lineAngleHeight ** 2 + lineAngleWidth ** 2)
     return lineAngle
+
+def processImage(image):
+    convexHull = findNoteContours(image, True)
+    ellipses = fitEllipsesToNotes(convexHull)
+    angles = computeEllipseAnglesFromCam(ellipses)
+    centers = [ellipse[0] for ellipse in ellipses]
+    distances0 = computeNoteDistancesFromAngles(angles)
+    distances1 = computeNoteDistancesFromMajorAxes(ellipses)
+    distances2 = computeNoteDistancesFromCenters(centers)
+    displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
+    # displayText = [str(ellipse[0]) for ellipse in ellipses]
+    toDisplay = drawEllipses(ellipses, displayText, image)
+    # print(image)
+
+    toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 10)
+    cv2.imshow("Frame", f.shrinkFrame(toDisplay, 2))

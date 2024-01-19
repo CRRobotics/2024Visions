@@ -14,7 +14,7 @@ savedImages = 0
 def saveImage(value):
     global savedImages
     savedImages += 1
-    fileName = "image" + savedImages + ".jpg"
+    fileName = "image" + str(savedImages) + ".jpg"
     path = os.path.join("note_detection", "angle_images", fileName)
     cv2.imwrite(path, image)
 
@@ -47,5 +47,6 @@ while True:
         cap.release()
         cap = f.waitForCam(0)
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+    print(image)
     processImage(image)
     cv2.waitKey(1)

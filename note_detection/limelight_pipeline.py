@@ -9,17 +9,17 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [179, 255, 255]
-HSV_LOWER = [169, 191, 78]
-BLUR_SIZE = 0
+HSV_UPPER = [13, 255, 255]
+HSV_LOWER = [6, 167, 38]
+BLUR_SIZE = 4
 
 CAMERA_CENTER_ANGLE_DEGREES = 0
 CAMERA_HEIGHT_IN = 12.75
 
-FOV_HEIGHT_DEGREES = 40
-FOV_HEIGHT_PIX = 720
-FOV_WIDTH_DEGREES = 70
-FOV_WIDTH_PIX = 1280
+FOV_HEIGHT_DEGREES = 41
+FOV_HEIGHT_PIX = 240
+FOV_WIDTH_DEGREES = 54
+FOV_WIDTH_PIX = 320
 
 NOTE_OUTER_RADIUS_IN = 14
 NOTE_THICKNESS_IN = 2
@@ -71,7 +71,7 @@ def processImage(image):
     toDisplay = drawEllipses(ellipses, displayText, image)
     # print(image)
 
-    toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 10)
+    toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 2)
     #cv2.imshow("Frame", shrinkFrame(toDisplay, 2))
     return toDisplay, mask
 
@@ -84,6 +84,15 @@ lower = np.array(HSV_LOWER)
 
 # Read the image and convert to HSV
 # sampleImage = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1559.jpeg"))
+
+def invertedHueMask(image):
+    lower1 = np.array([0, lower[1], lower[2]])
+    upper1 = np.array([lower[0], upper[1], upper[2]])
+    lower2 = np.array([upper[0], lower[1], lower[2]])
+    upper2 = np.array([HUE, upper[1], upper[2]])
+    mask1 = cv2.inRange(image, lower1, upper1)
+    mask2 = cv2.inRange(image, lower2, upper2)
+    return cv2.bitwise_or(mask1, mask2)
 
 def findNoteContours(image, displayMask = False):
     """Filters the image for notes and returns a list of convexHulls where they are"""
@@ -125,8 +134,8 @@ def drawEllipses(ellipses, textToDisplay, image):
         text = textToDisplay[i]
         try:
             ellipseCenter = tuple([int(coord) for coord in ellipse[0]])
-            toReturn = cv2.ellipse(toReturn, ellipse, (255, 255, 0), 20)
-            toReturn = cv2.putText(toReturn, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 0, 255), 5)
+            toReturn = cv2.ellipse(toReturn, ellipse, (255, 255, 0), 5)
+            toReturn = cv2.putText(toReturn, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 255), 2)
         except:
             # Errors this catches: ellipse has infinity in it, ellipse is zero size, center doesn't work for text
             print("Can't display ellipse")

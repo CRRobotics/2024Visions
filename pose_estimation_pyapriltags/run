@@ -1,0 +1,1 @@
+source ~/.venv/crescendo/bin/activate && python3 /home/crr/2024Visions/pose_estimation_pyapriltags/pose.py -h

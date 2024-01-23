@@ -74,7 +74,12 @@ def logPose(camid, rx, ry, rt, time):
             [camid, rx, ry, rt, time]
         )
 
-
+def log(s:str):
+    with open("/home/crr/2024Visions/pose_estimation_pyapriltags/log.csv", "a+", newline="") as log:
+        c = csv.writer(log)
+        c.writerow(
+            [s]
+        )
 
 
 
@@ -138,7 +143,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 """Drawing corners"""
                 cx, cy = detection.center
                 cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
-                cv.putText(frame, "id: %s"%(detection.tag_id), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 2, (255,255, 0))
+                cv.putText(frame, "id: %s, %.2f"%(detection.tag_id, detection.decision_margin), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, 2, (255,255, 0))
                 
 
                 """Updating objectpoints and cornerpoints lists."""

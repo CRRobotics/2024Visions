@@ -67,9 +67,9 @@ CAMERA_CONSTANTS = {
             -3382.3506940723159
             ]
         ]),
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
-        "thetar": 0 # Rotation to center of robot.
+        "yc": 0.3175,
+        "xc": -.2667, #.145 for kitbot, -.105 for duckbot
+        "thetar": 0
     },
     6: {
         "matrix":np.array([

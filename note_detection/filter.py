@@ -48,7 +48,7 @@ def fitEllipsesToNotes(convexHull):
 
 def drawEllipses(ellipses, textToDisplay, image = sampleImage):
     """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers"""
-    toReturn = image
+    toReturn = image.copy()
     for i in range(len(ellipses)):
         ellipse = ellipses[i]
         text = textToDisplay[i]

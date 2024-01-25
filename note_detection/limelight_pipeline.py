@@ -9,12 +9,12 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [13, 255, 255]
-HSV_LOWER = [6, 167, 38]
-BLUR_SIZE = 4
+HSV_UPPER = [16, 255, 255]
+HSV_LOWER = [7, 83, 112]
+BLUR_SIZE = 5
 
 CAMERA_CENTER_ANGLE_DEGREES = 0
-CAMERA_HEIGHT_IN = 12.75
+CAMERA_HEIGHT_IN = 19.75
 
 FOV_HEIGHT_DEGREES = 41
 FOV_HEIGHT_PIX = 240
@@ -70,6 +70,7 @@ def processImage(image):
     # displayText = [str(ellipse[0]) for ellipse in ellipses]
     toDisplay = drawEllipses(ellipses, displayText, image)
     # print(image)
+    print(displayText)
 
     toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 2)
     #cv2.imshow("Frame", shrinkFrame(toDisplay, 2))
@@ -243,9 +244,9 @@ def calibrate(image):
 # MAIN
 def runPipeline(image, llrobot):
     #print(image)
-    image, mask = processImage(image)
+    toDisplay, mask = processImage(image)
     mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
 
     llpython = [0, 0, 0, 0, 0, 0, 0, 0]
 
-    return [], image, llpython
+    return [], toDisplay, llpython

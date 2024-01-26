@@ -9,12 +9,12 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [16, 255, 255]
-HSV_LOWER = [7, 83, 112]
+HSV_UPPER = [19, 212, 172]
+HSV_LOWER = [7, 74, 57]
 BLUR_SIZE = 5
 
-CAMERA_CENTER_ANGLE_DEGREES = 0
-CAMERA_HEIGHT_IN = 19.75
+CAMERA_CENTER_ANGLE_DEGREES = 20
+CAMERA_HEIGHT_IN = 30.6
 
 FOV_HEIGHT_DEGREES = 41
 FOV_HEIGHT_PIX = 240
@@ -66,7 +66,10 @@ def processImage(image):
     distances0 = computeNoteDistancesFromAngles(angles)
     distances1 = computeNoteDistancesFromMajorAxes(ellipses)
     distances2 = computeNoteDistancesFromCenters(centers)
-    displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
+    anglesFromRobot = computeNoteAnglesFromRobot(centers)
+    xCoords = computeNoteXCoords(distances2, anglesFromRobot)
+    displayText = [str(round(distances2[i], 1)) + ", " + str(round(xCoords[i], 1)) + ", " + str(round(math.degrees(anglesFromRobot[i]), 1)) for i in range(len(ellipses))]
+    # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
     # displayText = [str(ellipse[0]) for ellipse in ellipses]
     toDisplay = drawEllipses(ellipses, displayText, image)
     # print(image)
@@ -179,7 +182,7 @@ def computeNoteDistancesFromMajorAxes(ellipses):
     return distances
 
 def computeNoteDistancesFromCenters(centers):
-    """Uses the center point of a note to calculate its distance based on the tilt of the camera, assuming it is on the floor and the center point is below the camera"""
+    """Uses the center point of a note to calculate its z-coordinate based on the tilt of the camera, assuming it is on the floor and the center point is below the camera"""
     distances = []
     for center in centers:
         centerY = center[1]
@@ -189,6 +192,27 @@ def computeNoteDistancesFromCenters(centers):
         distance = CAMERA_HEIGHT_IN / math.tan(angleAboveHorizontal)
         distances.append(distance)
     return distances
+
+def computeNoteAnglesFromRobot(centers):
+    """Returns the counterclockwise angle from a horizontal line perpendicular to the camera to the line from the camera to a note."""
+    angles = []
+    for center in centers:
+        centerX = center[0]
+        xDistanceAboveCamCenter = centerX - FOV_WIDTH_PIX / 2
+        angleFromCamCenter = pixelsToRadians(xDistanceAboveCamCenter, 0)
+        angleFromHorizontal = math.pi / 2 - math.copysign(angleFromCamCenter, xDistanceAboveCamCenter)
+        angles.append(angleFromHorizontal)
+    return angles
+
+def computeNoteXCoords(zCoords, angles):
+    """Given the z-coordinate and angle from the camera plane of a note, returns its x-coordinate."""
+    xCoords = []
+    for i in range(len(zCoords)):
+        zCoord = zCoords[i]
+        angle = angles[i]
+        xCoord = zCoord * math.cos(angle) / math.sin(angle)
+        xCoords.append(xCoord)
+    return xCoords
 
 # CALIBRATION
 

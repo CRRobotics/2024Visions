@@ -1,0 +1,204 @@
+import cv2
+import numpy as np
+import math
+from time import sleep
+import os
+
+# CONSTANTS
+HUE = 179
+SATURATION = 255
+VALUE = 255
+
+HSV_UPPER = [19, 183, 255]
+HSV_LOWER = [0, 0, 70]
+BLUR_SIZE = 5
+
+CAMERA_CENTER_ANGLE_DEGREES = -27
+CAMERA_HEIGHT_IN = -31
+
+FOV_HEIGHT_DEGREES = 41
+FOV_HEIGHT_PIX = 240
+FOV_WIDTH_DEGREES = 59.6 # 54
+FOV_WIDTH_PIX = 320
+
+NOTE_OUTER_RADIUS_IN = 14
+NOTE_THICKNESS_IN = 2
+
+# HELPER FUNCTIONS
+
+def polarToRectangular(rs, thetas):
+    xs = []
+    ys = []
+    for i in range(len(rs)):
+        r = rs[i]
+        theta = thetas[i]
+        x = r * math.cos(theta)
+        y = r * math.sin(theta)
+        xs.append(x)
+        ys.append(y)
+    return xs, ys
+
+def getOpticalAngle(img, orientation:int, coordinate:tuple):
+    """
+ gets the angle based on the fov, orientation, and coordinate of the parabola representing the target
+ @param img The image or frame to use
+ @param orientation The orientation of the angle (0 gets horizontal angle to the coordinate, 1 gets vertical angle to the tape)
+ NOTE: vertical angle is only accurate if the x-coordinate of the center coordinate is in the middle of the frame
+ @param coordinate The coordinate of the center of the tape or parabola"""
+    h, w, c = img.shape
+    # h = 240
+    # w = 360
+
+    px = coordinate[0]
+    py = coordinate[1]
+    # nx = (1/160) * (px - 159.5)
+    # ny = (1/120) * (119.5 - py)
+
+    # distanceFromCenter = (math.sqrt(((cX - centerPixel[0]) **2 ) + ((cY - centerPixel[1]) ** 2)))
+    centerPixel = (int(w / 2), int(h / 2))
+    if orientation == 0:
+        # angle = math.atan(nx / FOCAL_DISTANCE)
+        distanceFromCenter = px - centerPixel[0]
+        radiansPerPixelWidth = math.radians(FOV_WIDTH_DEGREES) / FOV_WIDTH_PIX
+        angle = radiansPerPixelWidth * distanceFromCenter
+    elif orientation == 1:
+        # angle = math.atan(ny / (math.sqrt(FOCAL_DISTANCE ** 2 + nx ** 2)))
+        distanceFromCenter = centerPixel[1] - py
+        # distanceFromCenter = math.sqrt(((px - centerPixel[0]) ** 2) + ((py - centerPixel[1]) ** 2))
+        # if centerPixel[1] - py < 0:
+        #     distanceFromCenter *= -1
+        radiansPerPixelHeight = math.radians(FOV_HEIGHT_DEGREES) / FOV_HEIGHT_PIX
+        angle = radiansPerPixelHeight * distanceFromCenter
+        # if count == 0:
+    return angle
+
+# determines the horizontal distance to the target based on the angle and height of the target relative to the robot
+def getHorizontalDistance(angle, degrees=False, heightToTarget=CAMERA_HEIGHT_IN):
+    return heightToTarget / math.tan(math.radians(angle)) if degrees else heightToTarget / math.tan(angle)
+
+# converts the horizontal angle relative to the optical axis to the horizontal angle relative to the ground
+def horizontalOpticalToGround(angle):
+    return math.atan((1 / math.cos(math.radians(CAMERA_CENTER_ANGLE_DEGREES))) * math.tan(angle))
+
+# converts the vertical angle relative to the optical axis to the vertical angle relative to the ground
+def verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle):
+    return math.asin(math.cos(math.radians(CAMERA_CENTER_ANGLE_DEGREES)) * math.sin(opticalVerticalAngle) + \
+        math.cos(opticalHorizontalAngle) * math.cos(opticalVerticalAngle) * math.sin(math.radians(CAMERA_CENTER_ANGLE_DEGREES)))
+
+def processImage(image):
+    convexHull, mask = findNoteContours(image, True)
+    ellipses = fitEllipsesToNotes(convexHull)
+    centers = [ellipse[0] for ellipse in ellipses]
+    distances2, groundAngles = computeNoteCoordsFromCenters(centers, image)
+    xCoords, zCoords = polarToRectangular(distances2, groundAngles)
+    #anglesFromRobot = computeNoteAnglesFromRobot(centers)
+    #xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
+    displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    # displayText = [str(round(distances2[i], 1)) + ", " + str(round(math.degrees(groundAngles[i]), 1)) for i in range(len(ellipses))]
+    # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
+    # displayText = [str(ellipse[0]) for ellipse in ellipses]
+    toDisplay = drawEllipses(ellipses, displayText, image)
+    # print(image)
+    print(displayText)
+
+    toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 2)
+    #cv2.imshow("Frame", shrinkFrame(toDisplay, 2))
+    xCoords.append(0)
+    zCoords.append(0)
+    return toDisplay, mask, xCoords, zCoords
+
+# FILTER CODE
+    
+# Get upper and lower bounds for HSV filter
+upper = np.array(HSV_UPPER)
+lower = np.array(HSV_LOWER)
+#print(upper)
+
+# Read the image and convert to HSV
+# sampleImage = cv2.imread(os.path.join("note_detection", "sample_images", "IMG_1559.jpeg"))
+
+def invertedHueMask(image):
+    lower1 = np.array([0, lower[1], lower[2]])
+    upper1 = np.array([lower[0], upper[1], upper[2]])
+    lower2 = np.array([upper[0], lower[1], lower[2]])
+    upper2 = np.array([HUE, upper[1], upper[2]])
+    mask1 = cv2.inRange(image, lower1, upper1)
+    mask2 = cv2.inRange(image, lower2, upper2)
+    return cv2.bitwise_or(mask1, mask2)
+
+def findNoteContours(image, displayMask = False):
+    """Filters the image for notes and returns a list of convexHulls where they are"""
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    blurred = cv2.medianBlur(image, BLUR_SIZE * 2 + 1)
+    mask = cv2.inRange(blurred, lower, upper)
+    if displayMask:
+        #cv2.imshow("Mask", shrinkFrame(mask, 2))
+        pass
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours:
+        return [], mask
+    largestContour = max(contours, key=lambda x: cv2.contourArea(x))
+    convexHull = [cv2.convexHull(largestContour)]
+
+    # Add in more filtering here
+
+    return convexHull, mask
+
+def fitEllipsesToNotes(convexHull):
+    ellipses = []
+    for hull in convexHull:
+        if len(hull) < 5: continue # fitEllipse needs at least 5 points
+        ellipse = cv2.fitEllipse(hull)
+        newMajor = ellipse[1][1] * (1 - NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN) # Shrink the ellipse to be at roughly the center of the torus
+        newMinor = ellipse[1][0] - ellipse[1][1] * NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN # Removing the same amount from the minor axis as the major axis
+        ellipse = list(ellipse)
+        ellipse[1] = (newMinor, newMajor)
+        ellipse = tuple(ellipse)
+        ellipses.append(ellipse)
+    
+    return ellipses
+
+def drawEllipses(ellipses, textToDisplay, image):
+    """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers"""
+    toReturn = image.copy()
+    for i in range(len(ellipses)):
+        ellipse = ellipses[i]
+        text = textToDisplay[i]
+        try:
+            ellipseCenter = tuple([int(coord) for coord in ellipse[0]])
+            toReturn = cv2.circle(toReturn, ellipseCenter, 0, (0, 0, 0), 5)
+            toReturn = cv2.ellipse(toReturn, ellipse, (255, 255, 0), 2)
+            toReturn = cv2.putText(toReturn, str(text), ellipseCenter, cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+        except:
+            # Errors this catches: ellipse has infinity in it, ellipse is zero size, center doesn't work for text
+            print("Can't display ellipse")
+    return toReturn
+
+# POS MATH
+
+def computeNoteCoordsFromCenters(centers, image):
+    """Uses the center point of a note to calculate its z-coordinate based on the tilt of the camera, assuming it is on the floor and the center point is below the camera"""
+    distances = []
+    angles = []
+    for vertex in centers:
+        opticalHorizontalAngle = getOpticalAngle(image, 0, vertex) if vertex is not None else getOpticalAngle(image, 0, centers[0])
+        groundHorizontalAngle = horizontalOpticalToGround(opticalHorizontalAngle)
+        opticalVerticalAngle = getOpticalAngle(image, 1, vertex) if vertex is not None else getOpticalAngle(image, 1, centers[0])
+        groundVerticalAngle = verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle)
+
+        horizontalDistance = getHorizontalDistance(groundVerticalAngle)
+        groundHorizontalAngle = math.pi / 2 - groundHorizontalAngle
+        distances.append(horizontalDistance)
+        angles.append(groundHorizontalAngle)
+    return distances, angles
+
+# MAIN
+
+def runPipeline(image, llrobot):
+    #print(image)
+    toDisplay, mask, xCoords, zCoords = processImage(image)
+    mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+
+    llpython = [xCoords[0], zCoords[0], 0, 0, 0, 0, 0, 0]
+
+    return [], toDisplay, llpython

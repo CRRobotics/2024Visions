@@ -51,12 +51,24 @@ def waitForCam(path):
 
 def pixelsToRadians(pixelLength, angle):
     """Converts a line of pixelLength pixels rotated clockwise from a horizontal line by angle degrees into an angle in radians based on the camera's FOV."""
-    radiansPerPixelHeight = math.radians(FOV_HEIGHT_DEGREES / FOV_HEIGHT_PIX)
-    radiansPerPixelWidth = math.radians(FOV_WIDTH_DEGREES / FOV_WIDTH_PIX)
+    radiansPerPixelHeight = math.radians(FOV_HEIGHT_DEGREES) / FOV_HEIGHT_PIX
+    radiansPerPixelWidth = math.radians(FOV_WIDTH_DEGREES) / FOV_WIDTH_PIX
     lineAngleHeight = pixelLength * math.sin(math.radians(angle)) * radiansPerPixelHeight
     lineAngleWidth = pixelLength * abs(math.cos(math.radians(angle))) * radiansPerPixelWidth
     lineAngle = math.sqrt(lineAngleHeight ** 2 + lineAngleWidth ** 2)
     return lineAngle
+
+def polarToRectangular(rs, thetas):
+    xs = []
+    ys = []
+    for i in range(len(rs)):
+        r = rs[i]
+        theta = thetas[i]
+        x = r * math.cos(theta)
+        y = r * math.sin(theta)
+        xs.append(x)
+        ys.append(y)
+    return xs, ys
 
 def pointAngleAboveHorizontal(center):
     """Calculates the angle of the given point below a horizontal line."""
@@ -66,6 +78,15 @@ def pointAngleAboveHorizontal(center):
     angleAboveHorizontal = math.copysign(angleAboveCamCenter, -heightAboveCamCenter) + math.radians(CAMERA_CENTER_ANGLE_DEGREES)
     return angleAboveHorizontal
 
+# converts the horizontal angle relative to the optical axis to the horizontal angle relative to the ground
+def horizontalOpticalToGround(angle):
+    return math.atan((1 / math.cos(math.radians(CAMERA_CENTER_ANGLE_DEGREES))) * math.tan(angle))
+
+# converts the vertical angle relative to the optical axis to the vertical angle relative to the ground
+def verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle):
+    return math.asin(math.cos(math.radians(CAMERA_CENTER_ANGLE_DEGREES)) * math.sin(opticalVerticalAngle) + \
+        math.cos(opticalHorizontalAngle) * math.cos(opticalVerticalAngle) * math.sin(math.radians(CAMERA_CENTER_ANGLE_DEGREES)))
+
 def processImage(image):
     convexHull, mask = findNoteContours(image, True)
     ellipses = fitEllipsesToNotes(convexHull)
@@ -73,10 +94,12 @@ def processImage(image):
     centers = [ellipse[0] for ellipse in ellipses]
     distances0 = computeNoteDistancesFromAngles(angles)
     distances1 = computeNoteDistancesFromMajorAxes(ellipses)
-    distances2 = computeNoteDistancesFromCenters(centers)
-    anglesFromRobot = computeNoteAnglesFromRobot(centers)
-    xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
-    displayText = [str(round(distances2[i], 1)) + ", " + str(round(xCoords[i], 1)) + ", " + str(round(math.degrees(anglesFromRobot[i]), 1)) for i in range(len(ellipses))]
+    distances2, groundAngles = computeNoteCoordsFromCenters(centers)
+    xCoords, zCoords = polarToRectangular(distances2, groundAngles)
+    #anglesFromRobot = computeNoteAnglesFromRobot(centers)
+    #xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
+    displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    # displayText = [str(round(distances2[i], 1)) + ", " + str(round(math.degrees(groundAngles[i]), 1)) for i in range(len(ellipses))]
     # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
     # displayText = [str(ellipse[0]) for ellipse in ellipses]
     toDisplay = drawEllipses(ellipses, displayText, image)
@@ -189,14 +212,28 @@ def computeNoteDistancesFromMajorAxes(ellipses):
         distances.append(distance)
     return distances
 
-def computeNoteDistancesFromCenters(centers):
+def computeNoteCoordsFromCenters(centers):
     """Uses the center point of a note to calculate its z-coordinate based on the tilt of the camera, assuming it is on the floor and the center point is below the camera"""
     distances = []
+    angles = []
     for center in centers:
-        angleAboveHorizontal = pointAngleAboveHorizontal(center)
-        distance = CAMERA_HEIGHT_IN / math.tan(angleAboveHorizontal)
+        centerY = center[1]
+        heightAboveCamCenter = FOV_HEIGHT_PIX / 2 - centerY
+        angleAboveCamCenter = math.copysign(pixelsToRadians(heightAboveCamCenter, 90), -heightAboveCamCenter)
+        #angleAboveHorizontal = pointAngleAboveHorizontal(center)
+
+        centerX = center[0]
+        xDistanceAboveCamCenter = centerX - FOV_WIDTH_PIX / 2
+        angleFromCamCenter = pixelsToRadians(xDistanceAboveCamCenter, 0)
+
+        groundAngle = horizontalOpticalToGround(angleFromCamCenter)
+        verticalAngle = verticalOpticalToGround(angleFromCamCenter, angleAboveCamCenter)
+        distance = CAMERA_HEIGHT_IN / math.tan(verticalAngle)
+
+        angle = math.pi / 2 - math.copysign(groundAngle, xDistanceAboveCamCenter)
         distances.append(distance)
-    return distances
+        angles.append(angle)
+    return distances, angles
 
 def computeNoteAnglesFromRobot(centers):
     """Returns the counterclockwise angle from a horizontal line perpendicular to the camera to the line from the camera to a note."""

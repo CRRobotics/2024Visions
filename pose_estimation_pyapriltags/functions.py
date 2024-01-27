@@ -136,13 +136,13 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 for x, y in detection.corners:
                     corner = (int(x), int(y))
                     cv.putText(frame, f"{corner_counter}", corner, cv.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0))
-                    cv.circle(frame, corner, 5, (255,0,0), -1)
+                    cv.circle(frame, corner, 3, (255,0,0), -1)
                     corner_counter += 1
                     cornerpoints.append([x, y])
 
                 """Drawing corners"""
                 cx, cy = detection.center
-                cv.circle(frame, (int(cx), int(cy)), 5, (0, 0, 255), -1)
+                cv.circle(frame, (int(cx), int(cy)), 3, (0, 0, 255), -1)
                 cv.putText(frame, "id: %s, %.2f"%(detection.tag_id, detection.decision_margin), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, .5, (255,0, 255))
                 #cornerpoints.append([cx, cy])
 

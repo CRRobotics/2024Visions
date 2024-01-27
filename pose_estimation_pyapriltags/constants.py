@@ -89,7 +89,7 @@ CAMERA_CONSTANTS = {
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "xc": 0.32385, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     },
     8: {
@@ -127,7 +127,7 @@ CAMERA_CONSTANTS = {
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "xc": 0.32385, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     }
 }

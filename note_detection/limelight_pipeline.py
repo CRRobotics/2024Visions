@@ -9,12 +9,12 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [19, 212, 172]
-HSV_LOWER = [7, 74, 57]
+HSV_UPPER = [19, 183, 255]
+HSV_LOWER = [0, 0, 70]
 BLUR_SIZE = 5
 
-CAMERA_CENTER_ANGLE_DEGREES = 20
-CAMERA_HEIGHT_IN = 30.6
+CAMERA_CENTER_ANGLE_DEGREES = 29
+CAMERA_HEIGHT_IN = 28.7
 
 FOV_HEIGHT_DEGREES = 41
 FOV_HEIGHT_PIX = 240
@@ -58,6 +58,14 @@ def pixelsToRadians(pixelLength, angle):
     lineAngle = math.sqrt(lineAngleHeight ** 2 + lineAngleWidth ** 2)
     return lineAngle
 
+def pointAngleAboveHorizontal(center):
+    """Calculates the angle of the given point below a horizontal line."""
+    centerY = center[1]
+    heightAboveCamCenter = FOV_HEIGHT_PIX / 2 - centerY
+    angleAboveCamCenter = pixelsToRadians(heightAboveCamCenter, 90)
+    angleAboveHorizontal = math.copysign(angleAboveCamCenter, -heightAboveCamCenter) + math.radians(CAMERA_CENTER_ANGLE_DEGREES)
+    return angleAboveHorizontal
+
 def processImage(image):
     convexHull, mask = findNoteContours(image, True)
     ellipses = fitEllipsesToNotes(convexHull)
@@ -67,7 +75,7 @@ def processImage(image):
     distances1 = computeNoteDistancesFromMajorAxes(ellipses)
     distances2 = computeNoteDistancesFromCenters(centers)
     anglesFromRobot = computeNoteAnglesFromRobot(centers)
-    xCoords = computeNoteXCoords(distances2, anglesFromRobot)
+    xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
     displayText = [str(round(distances2[i], 1)) + ", " + str(round(xCoords[i], 1)) + ", " + str(round(math.degrees(anglesFromRobot[i]), 1)) for i in range(len(ellipses))]
     # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
     # displayText = [str(ellipse[0]) for ellipse in ellipses]
@@ -185,10 +193,7 @@ def computeNoteDistancesFromCenters(centers):
     """Uses the center point of a note to calculate its z-coordinate based on the tilt of the camera, assuming it is on the floor and the center point is below the camera"""
     distances = []
     for center in centers:
-        centerY = center[1]
-        heightAboveCamCenter = FOV_HEIGHT_PIX / 2 - centerY
-        angleAboveCamCenter = pixelsToRadians(heightAboveCamCenter, 90)
-        angleAboveHorizontal = angleAboveCamCenter + math.radians(CAMERA_CENTER_ANGLE_DEGREES)
+        angleAboveHorizontal = pointAngleAboveHorizontal(center)
         distance = CAMERA_HEIGHT_IN / math.tan(angleAboveHorizontal)
         distances.append(distance)
     return distances
@@ -204,13 +209,18 @@ def computeNoteAnglesFromRobot(centers):
         angles.append(angleFromHorizontal)
     return angles
 
-def computeNoteXCoords(zCoords, angles):
+def computeNoteXCoords(zCoords, angles, centers):
     """Given the z-coordinate and angle from the camera plane of a note, returns its x-coordinate."""
     xCoords = []
     for i in range(len(zCoords)):
         zCoord = zCoords[i]
         angle = angles[i]
-        xCoord = zCoord * math.cos(angle) / math.sin(angle)
+        center = centers[i]
+        weirdAngle = pointAngleAboveHorizontal(center)
+        """math.degree"""
+        distance1 = CAMERA_HEIGHT_IN * (1 / math.tan(weirdAngle))
+        distance = math.sqrt(distance1 ** 2 + CAMERA_HEIGHT_IN ** 2)
+        xCoord = distance * math.cos(angle)
         xCoords.append(xCoord)
     return xCoords
 

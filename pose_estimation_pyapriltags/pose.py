@@ -63,24 +63,25 @@ if __name__ == "__main__":
     time.sleep(10)
     headless = "-h" in sys.argv
 
-    # nt = networkConnect()
-    nt = None
+    #nt = networkConnect()
+    
     
     print("Connected to networktables")
     log("connected to apriltags")
 
-    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.3:1.0-video-index0"),nt,headless, False])
-    t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.4:1.0-video-index0"),nt,headless, False])
-    t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.2:1.0-video-index0"),nt,headless, False])
-    t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.1:1.0-video-index0"),nt,headless, True])
-    t5 = threading.Thread(target=process_frame, args=[10, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usb-0:1.2:1.0-video-index0"),nt,headless, False])
+    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, True])
+    t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.4:1.0-video-index0"),nt,headless, False])
+    t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.2:1.0-video-index0"),nt,headless, False])
+    t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.1:1.0-video-index0"),nt,headless, False])
+    t5 = threading.Thread(target=process_frame, args=[8, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, False])
+    t6 = threading.Thread(target=process_frame, args=[10, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.2:1.0-video-index0"),nt,headless, False])
 
     cam_lst = [
-        #t1,
-        #t2,
+        t1,
+        # t2,
         #t3,
-        t4,
-        t5
+        #t4,
+        #t6
     ]
 
     print("starting cams")

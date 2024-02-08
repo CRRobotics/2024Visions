@@ -9,12 +9,12 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [19, 183, 255]
-HSV_LOWER = [0, 0, 70]
-BLUR_SIZE = 5
+HSV_UPPER = [25, 255, 169]
+HSV_LOWER = [5, 45, 0]
+BLUR_SIZE = 4
 
-CAMERA_CENTER_ANGLE_DEGREES = -27
-CAMERA_HEIGHT_IN = -31
+CAMERA_CENTER_ANGLE_DEGREES = -29
+CAMERA_HEIGHT_IN = -8.5
 
 FOV_HEIGHT_DEGREES = 41
 FOV_HEIGHT_PIX = 240
@@ -23,6 +23,13 @@ FOV_WIDTH_PIX = 320
 
 NOTE_OUTER_RADIUS_IN = 14
 NOTE_THICKNESS_IN = 2
+
+X_ERROR_M = 0.96
+X_ERROR_B = 0.69
+Z_ERROR_M = 0.92
+Z_ERROR_B = 8.06
+
+ACCEPTED_ERROR = 2000;
 
 # HELPER FUNCTIONS
 
@@ -90,17 +97,24 @@ def processImage(image):
     ellipses = fitEllipsesToNotes(convexHull)
     centers = [ellipse[0] for ellipse in ellipses]
     distances2, groundAngles = computeNoteCoordsFromCenters(centers, image)
+    distances2, groundAngles, ellipses, errors, image = isANote(distances2, groundAngles, ellipses, image)
     xCoords, zCoords = polarToRectangular(distances2, groundAngles)
+    #xCoords, zCoords = undoError(xCoords, zCoords)
     #anglesFromRobot = computeNoteAnglesFromRobot(centers)
     #xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
-    displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    #if (isANote(distances2[0], groundAngles[0])):
+    #displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    #else:
+    #    displayText = "No Note In View"
     # displayText = [str(round(distances2[i], 1)) + ", " + str(round(math.degrees(groundAngles[i]), 1)) for i in range(len(ellipses))]
     # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
-    # displayText = [str(ellipse[0]) for ellipse in ellipses]
+    displayText = [str(round(error, 1)) for error in errors]
+    #if (isANote()):
     toDisplay = drawEllipses(ellipses, displayText, image)
+        
     # print(image)
     print(displayText)
-
+    #if (isANote()):
     toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 2)
     #cv2.imshow("Frame", shrinkFrame(toDisplay, 2))
     xCoords.append(0)
@@ -192,6 +206,68 @@ def computeNoteCoordsFromCenters(centers, image):
         angles.append(groundHorizontalAngle)
     return distances, angles
 
+def undoError(givenXs, givenZs):
+    """Uses the given X and Z and the error of the given X and Z, adjusts for the error of the functions."""
+    adjustedXs = []
+    adjustedZs = []
+    for i in range(len(givenXs)):
+        givenX = givenXs[i]
+        givenZ = givenZs[i]
+        adjustedX = (givenX - X_ERROR_B) / X_ERROR_M
+        adjustedZ = (givenZ - Z_ERROR_B) / Z_ERROR_M
+        adjustedXs.append(adjustedX)
+        adjustedZs.append(adjustedZ)
+    return adjustedXs, adjustedZs
+
+def pixelsToRadians(pixelLength, angle):
+    """Converts a line of pixelLength pixels rotated clockwise from a horizontal line by angle degrees into an angle in radians based on the camera's FOV."""
+    radiansPerPixelHeight = math.radians(FOV_HEIGHT_DEGREES) / FOV_HEIGHT_PIX
+    radiansPerPixelWidth = math.radians(FOV_WIDTH_DEGREES) / FOV_WIDTH_PIX
+    lineAngleHeight = pixelLength * math.sin(math.radians(angle)) * radiansPerPixelHeight
+    lineAngleWidth = pixelLength * abs(math.cos(math.radians(angle))) * radiansPerPixelWidth
+    lineAngle = math.sqrt(lineAngleHeight ** 2 + lineAngleWidth ** 2)
+    return lineAngle   
+
+"""
+def isANote(ellipses,):
+    try:
+        ellipse = ellipses[0]
+        newMajor = ellipse[1][1] * (1 - NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN)
+        if (newMajor < NOTE_OUTER_RADIUS_IN + ACCEPTED_ERROR and newMajor > NOTE_OUTER_RADIUS_IN - ACCEPTED_ERROR):
+            return True
+        return False
+    except:
+        print("hi")
+        return False
+        """
+
+def isANote(distances, angles, ellipses, image):
+    """Determines if the thing it is detecting is a note."""
+    passedEllipses = []
+    passedDistances = []
+    passedAnglese = []
+    errors = []
+    toReturn = image
+    for i in range(len(ellipses)):
+        ellipse = ellipses[i]
+        distance = distances[i]
+        angle = angles[i]
+        xCoord = ellipse[0][0] + ellipse[1][1] / 2 * math.cos(-math.radians(90 - ellipse[2]))
+        yCoord = ellipse[0][1] + ellipse[1][1] / 2 * math.sin(-math.radians(90 - ellipse[2]))
+        toReturn = cv2.circle(toReturn, (int(xCoord), int(yCoord)), 0, (0, 0, 0), 5)
+        distance1, angle1 = computeNoteCoordsFromCenters([(xCoord, yCoord)], image)
+        distance1 = distance1[0]
+        angle1 = angle1[0]
+        distanceBetween = math.sqrt(distance ** 2 + distance1 ** 2 - 2 * distance * distance1 * math.cos(abs(angle - angle1)))
+        #print(distanceBetween)
+        #print(distanceBetween - 6)
+        if (distanceBetween < (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + ACCEPTED_ERROR and distanceBetween > (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 - ACCEPTED_ERROR):
+            passedEllipses.append(ellipse)
+            passedDistances.append(distance)
+            passedAnglese.append(angle)
+            errors.append(distanceBetween - 6)
+    return passedDistances, passedAnglese, passedEllipses, errors, toReturn
+
 # MAIN
 
 def runPipeline(image, llrobot):
@@ -202,3 +278,12 @@ def runPipeline(image, llrobot):
     llpython = [xCoords[0], zCoords[0], 0, 0, 0, 0, 0, 0]
 
     return [], toDisplay, llpython
+
+'''
+An ellipse:
+(
+    (centerX, centerY),
+    (minorAxisLength, majorAxisLength),
+    angleFromVerticalToMajorAxis
+)
+'''

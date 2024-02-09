@@ -9,9 +9,9 @@ HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [25, 255, 169]
-HSV_LOWER = [5, 45, 0]
-BLUR_SIZE = 4
+HSV_UPPER = [19, 255, 208]
+HSV_LOWER = [6, 95, 61]
+BLUR_SIZE = 3
 
 CAMERA_CENTER_ANGLE_DEGREES = -29
 CAMERA_HEIGHT_IN = -8.5
@@ -29,7 +29,11 @@ X_ERROR_B = 0.69
 Z_ERROR_M = 0.92
 Z_ERROR_B = 8.06
 
-ACCEPTED_ERROR = 2000;
+ACCEPTED_ERROR_A = 0.02675
+ACCEPTED_ERROR_B = 0.0894167
+ACCEPTED_ERROR_C = -2.72321
+ACCEPTED_ERROR_D_MIN = -0.7
+ACCEPTED_ERROR_D_MAX = 0.4
 
 # HELPER FUNCTIONS
 
@@ -103,12 +107,12 @@ def processImage(image):
     #anglesFromRobot = computeNoteAnglesFromRobot(centers)
     #xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
     #if (isANote(distances2[0], groundAngles[0])):
-    #displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    displayText = [str(round(errors[i], 1)) + ", " + str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
     #else:
     #    displayText = "No Note In View"
     # displayText = [str(round(distances2[i], 1)) + ", " + str(round(math.degrees(groundAngles[i]), 1)) for i in range(len(ellipses))]
     # displayText = [str(round(distances0[i], 1)) + ", " + str(round(distances1[i], 1)) + ", " + str(round(distances2[i], 1)) for i in range(len(ellipses))]
-    displayText = [str(round(error, 1)) for error in errors]
+    # displayText = [str(round(error, 1)) for error in errors]
     #if (isANote()):
     toDisplay = drawEllipses(ellipses, displayText, image)
         
@@ -151,8 +155,8 @@ def findNoteContours(image, displayMask = False):
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
         return [], mask
-    largestContour = max(contours, key=lambda x: cv2.contourArea(x))
-    convexHull = [cv2.convexHull(largestContour)]
+    # largestContour = max(contours, key=lambda x: cv2.contourArea(x))
+    convexHull = [cv2.convexHull(contour) for contour in contours]
 
     # Add in more filtering here
 
@@ -254,14 +258,21 @@ def isANote(distances, angles, ellipses, image):
         angle = angles[i]
         xCoord = ellipse[0][0] + ellipse[1][1] / 2 * math.cos(-math.radians(90 - ellipse[2]))
         yCoord = ellipse[0][1] + ellipse[1][1] / 2 * math.sin(-math.radians(90 - ellipse[2]))
-        toReturn = cv2.circle(toReturn, (int(xCoord), int(yCoord)), 0, (0, 0, 0), 5)
+        #xCoord = 0
+        #toReturn = cv2.circle(toReturn, (int(xCoord), int(yCoord)), 0, (0, 0, 0), 5)
         distance1, angle1 = computeNoteCoordsFromCenters([(xCoord, yCoord)], image)
         distance1 = distance1[0]
         angle1 = angle1[0]
         distanceBetween = math.sqrt(distance ** 2 + distance1 ** 2 - 2 * distance * distance1 * math.cos(abs(angle - angle1)))
         #print(distanceBetween)
         #print(distanceBetween - 6)
-        if (distanceBetween < (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + ACCEPTED_ERROR and distanceBetween > (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 - ACCEPTED_ERROR):
+        x1, z1 = polarToRectangular([distance], [angle])
+        x1 = x1[0]
+        z1 = z1[0]
+        accpetedErrorMin = ACCEPTED_ERROR_A * z1 + ACCEPTED_ERROR_B * abs(x1 - ACCEPTED_ERROR_C) + ACCEPTED_ERROR_D_MIN
+        accpetedErrorMax = ACCEPTED_ERROR_A * z1 + ACCEPTED_ERROR_B * abs(x1 - ACCEPTED_ERROR_C) + ACCEPTED_ERROR_D_MAX
+        #print(accpetedErrorMin, accpetedErrorMax)
+        if (distanceBetween < (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + accpetedErrorMax and distanceBetween > (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 - accpetedErrorMin):
             passedEllipses.append(ellipse)
             passedDistances.append(distance)
             passedAnglese.append(angle)

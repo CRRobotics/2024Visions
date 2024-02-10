@@ -4,21 +4,27 @@ import math
 from time import sleep
 import os
 
+# GLOBAL VARIABLES
+
+lastX = 0
+lastZ = 0
+
 # CONSTANTS
+
 HUE = 179
 SATURATION = 255
 VALUE = 255
 
-HSV_UPPER = [19, 255, 208]
-HSV_LOWER = [6, 95, 61]
-BLUR_SIZE = 3
+HSV_UPPER = [19, 219, 197]
+HSV_LOWER = [7, 78, 61]
+BLUR_SIZE = 4
 
 CAMERA_CENTER_ANGLE_DEGREES = -29
 CAMERA_HEIGHT_IN = -8.5
 
 FOV_HEIGHT_DEGREES = 41
 FOV_HEIGHT_PIX = 240
-FOV_WIDTH_DEGREES = 59.6 # 54
+FOV_WIDTH_DEGREES = 54
 FOV_WIDTH_PIX = 320
 
 NOTE_OUTER_RADIUS_IN = 14
@@ -98,16 +104,17 @@ def verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle):
 
 def processImage(image):
     convexHull, mask = findNoteContours(image, True)
-    ellipses = fitEllipsesToNotes(convexHull)
+    ellipses, convexHull = fitEllipsesToNotes(convexHull)
     centers = [ellipse[0] for ellipse in ellipses]
     distances2, groundAngles = computeNoteCoordsFromCenters(centers, image)
-    distances2, groundAngles, ellipses, errors, image = isANote(distances2, groundAngles, ellipses, image)
+    #distances2, groundAngles, ellipses, errors, image = isANote(distances2, groundAngles, ellipses, image)
+    convexHull, distances2, groundAngles, ellipses = closestNote(convexHull, distances2, groundAngles, ellipses)
     xCoords, zCoords = polarToRectangular(distances2, groundAngles)
     #xCoords, zCoords = undoError(xCoords, zCoords)
     #anglesFromRobot = computeNoteAnglesFromRobot(centers)
     #xCoords = computeNoteXCoords(distances2, anglesFromRobot, centers)
     #if (isANote(distances2[0], groundAngles[0])):
-    displayText = [str(round(errors[i], 1)) + ", " + str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
+    displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))]
     #else:
     #    displayText = "No Note In View"
     # displayText = [str(round(distances2[i], 1)) + ", " + str(round(math.degrees(groundAngles[i]), 1)) for i in range(len(ellipses))]
@@ -164,8 +171,10 @@ def findNoteContours(image, displayMask = False):
 
 def fitEllipsesToNotes(convexHull):
     ellipses = []
+    passedHulls = []
     for hull in convexHull:
         if len(hull) < 5: continue # fitEllipse needs at least 5 points
+        passedHulls.append(hull)
         ellipse = cv2.fitEllipse(hull)
         newMajor = ellipse[1][1] * (1 - NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN) # Shrink the ellipse to be at roughly the center of the torus
         newMinor = ellipse[1][0] - ellipse[1][1] * NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN # Removing the same amount from the minor axis as the major axis
@@ -174,7 +183,7 @@ def fitEllipsesToNotes(convexHull):
         ellipse = tuple(ellipse)
         ellipses.append(ellipse)
     
-    return ellipses
+    return ellipses, passedHulls
 
 def drawEllipses(ellipses, textToDisplay, image):
     """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers"""
@@ -271,22 +280,43 @@ def isANote(distances, angles, ellipses, image):
         z1 = z1[0]
         accpetedErrorMin = ACCEPTED_ERROR_A * z1 + ACCEPTED_ERROR_B * abs(x1 - ACCEPTED_ERROR_C) + ACCEPTED_ERROR_D_MIN
         accpetedErrorMax = ACCEPTED_ERROR_A * z1 + ACCEPTED_ERROR_B * abs(x1 - ACCEPTED_ERROR_C) + ACCEPTED_ERROR_D_MAX
+        acceptedErrorMin = -639
+        accpetedErrorMax = 639
         #print(accpetedErrorMin, accpetedErrorMax)
-        if (distanceBetween < (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + accpetedErrorMax and distanceBetween > (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 - accpetedErrorMin):
+        if (distanceBetween < (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + accpetedErrorMax and distanceBetween > (NOTE_OUTER_RADIUS_IN - NOTE_THICKNESS_IN) / 2 + accpetedErrorMin):
             passedEllipses.append(ellipse)
             passedDistances.append(distance)
             passedAnglese.append(angle)
             errors.append(distanceBetween - 6)
     return passedDistances, passedAnglese, passedEllipses, errors, toReturn
 
+def closestNote(contours, distances, angles, ellipses):
+    """Finds the closest and biggest contour."""
+    if len(ellipses) == 0:
+        return [], [], [], []
+    maxNote = 0
+    maxIndex = -1
+    for i in range(len(ellipses)):
+        contour = contours[i]
+        distance = distances[i]
+        sizeDistance = cv2.contourArea(contour) / distance
+        if sizeDistance > maxNote:
+            maxNote = sizeDistance
+            maxIndex = i
+    return [contours[maxIndex]], [distances[maxIndex]], [angles[maxIndex]], [ellipses[maxIndex]]
+
 # MAIN
 
 def runPipeline(image, llrobot):
+    global lastX, lastZ
     #print(image)
     toDisplay, mask, xCoords, zCoords = processImage(image)
     mask = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
 
     llpython = [xCoords[0], zCoords[0], 0, 0, 0, 0, 0, 0]
+    #print(lastX - xCoords[0], lastZ - zCoords[0])
+    lastX = xCoords[0]
+    lastZ = zCoords[0]
 
     return [], toDisplay, llpython
 

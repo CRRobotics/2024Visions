@@ -11,7 +11,7 @@ LOG_PATH = "/home/crr/2024Visions/pose_estimation_pyapriltags/log.csv"
 ALT_LOG_PATH = "/home/crr/2024Visions/pose_estimation_pyapriltags/log_after_center.csv"
 
 
-PIXEL_MARGIN = 7
+PIXEL_MARGIN = 12
 
 SERVER = "10.6.39.2"
 
@@ -130,7 +130,7 @@ CAMERA_CONSTANTS = {
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0.32385, #X coordinate to center of robot. (meters I believe)
+        "xc": 0.32885, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     }
 }

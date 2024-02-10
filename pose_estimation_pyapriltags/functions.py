@@ -83,9 +83,6 @@ def log(s:str):
 
 
 
-
-
-
 """APRILTAG FUNCTIONS -----------------------------------"""
 def getDetector():
     """Returns an Apriltag Detector"""
@@ -147,7 +144,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 #cornerpoints.append([cx, cy])
 
                 """Updating objectpoints and cornerpoints lists."""
-                for coord in constants.ID_TESTING_POS[detection.tag_id]:
+                for coord in constants.ID_POS[detection.tag_id]:
                     objectpoints.append(coord)
                 
                 margins.append(detection.decision_margin)

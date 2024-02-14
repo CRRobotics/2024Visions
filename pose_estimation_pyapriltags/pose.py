@@ -25,11 +25,12 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
     framecount = 0
     while True:
         current_time = datetime.now().timestamp()
-        success, frame1 = cap.read()
-        framecount += 1
         delta = current_time - prev_time
         fps = framecount / delta
-        if framecount % 10 ==0 :
+        success, frame1 = cap.read()
+        framecount += 1
+        
+        if framecount % 100 ==0 :
             framecount = 0
             prev_time = current_time
         if not success:
@@ -54,17 +55,21 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
             pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
             mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
 
+
         if (not headless) and show_select: 
             cv.putText(frame1, "fps:%.2f"%(fps), (1200, 600), cv.FONT_HERSHEY_SIMPLEX, .5, (255,0, 255))
             cv.imshow(f"CAMID{cameraid}:", frame1)
         cv.waitKey(1)
+
         
+    
 
         
 
 if __name__ == "__main__":
 
     time.sleep(10)
+
     headless = "-h" in sys.argv
 
     #nt = networkConnect()
@@ -75,7 +80,7 @@ if __name__ == "__main__":
 
     valueLog = {}
 
-    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, True, valueLog])
+    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, False, valueLog])
     t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.4:1.0-video-index0"),nt,headless, False, valueLog])
     t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.2:1.0-video-index0"),nt,headless, False, valueLog])
     t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.1:1.0-video-index0"),nt,headless, True, valueLog])
@@ -85,10 +90,10 @@ if __name__ == "__main__":
     # right port: /dev/v4l/by-path/pci-0000:06:00.3-usbv2-0:2:1.0-video-index0 
 
     cam_lst = [
-        t1,
+        #t1,
         #t2,
         #t3,
-        #t4,
+        t4,
         #t5,
         #t6
     ]

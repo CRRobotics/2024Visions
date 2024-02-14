@@ -19,7 +19,8 @@ def waitForCam(path):
         cap:cv.VideoCapture
         cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
         cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
-        cap.set(cv.CAP_PROP_FPS, 20)
+        cap.set(cv.CAP_PROP_FPS, 30)
+        cap.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         if cap.isOpened():
             print("open")
             return cap

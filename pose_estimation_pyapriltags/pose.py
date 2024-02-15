@@ -38,9 +38,9 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
             rx = 63900
             ry = 63900
             tags = 0
-            logPose(cameraid, rx, ry, math.degrees(robotheta), current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
+            logPose(cameraid, rx, ry, math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
+            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, fps, current_time)
+            mainThreadLog[cameraid] = [rx, ry, robotheta, tags, fps]
             print("failed to get image from camid ", cameraid)
             cap.release()
             cap = waitForCam(path)
@@ -51,9 +51,9 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
             robotheta = pose_calc["angle"]
             rx, ry, _ = pose_calc["pos"]
             tags = pose_calc["tags"]
-            logPose(cameraid, rx, ry,  math.degrees(robotheta), current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
+            logPose(cameraid, rx, ry,  math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
+            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, fps, current_time)
+            mainThreadLog[cameraid] = [rx, ry, robotheta, fps, tags]
 
 
         if (not headless) and show_select: 
@@ -80,12 +80,12 @@ if __name__ == "__main__":
 
     valueLog = {}
 
-    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, False, valueLog])
-    t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.4:1.0-video-index0"),nt,headless, False, valueLog])
-    t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.2:1.0-video-index0"),nt,headless, False, valueLog])
+    t1 = threading.Thread(target=process_frame, args=[0, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.3:1.0-video-index0"),nt,headless, True, valueLog])
+    t2 = threading.Thread(target=process_frame, args=[2, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.4:1.0-video-index0"),nt,headless, True, valueLog])
+    t3 = threading.Thread(target=process_frame, args=[4, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.2:1.0-video-index0"),nt,headless, True, valueLog])
     t4 = threading.Thread(target=process_frame, args=[6, os.path.realpath("/dev/v4l/by-path/pci-0000:05:00.0-usbv2-0:1.1:1.0-video-index0"),nt,headless, True, valueLog])
-    t5 = threading.Thread(target=process_frame, args=[8, os.path.realpath("/dev/v4l/by-path/pci-0000:06:00.4-usbv2-0:2:1.0-video-index0"),nt,headless, False, valueLog])
-    t6 = threading.Thread(target=process_frame, args=[10, os.path.realpath("/dev/v4l/by-path/pci-0000:06:00.3-usbv2-0:2:1.0-video-index0"),nt,headless, False, valueLog])
+    t5 = threading.Thread(target=process_frame, args=[8, os.path.realpath("/dev/v4l/by-path/pci-0000:06:00.4-usbv2-0:2:1.0-video-index0"),nt,headless, True, valueLog])
+    t6 = threading.Thread(target=process_frame, args=[10, os.path.realpath("/dev/v4l/by-path/pci-0000:06:00.3-usbv2-0:2:1.0-video-index0"),nt,headless, True, valueLog])
     # left port: /dev/v4l/by-path/pci-0000:06:00.4-usbv2-0:2:1.0-video-index0
     # right port: /dev/v4l/by-path/pci-0000:06:00.3-usbv2-0:2:1.0-video-index0 
 

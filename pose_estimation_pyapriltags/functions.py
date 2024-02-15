@@ -17,6 +17,7 @@ def waitForCam(path):
     while True:
         cap = cv.VideoCapture(path)
         cap:cv.VideoCapture
+        cap.set(cv.CAP_PROP_FOURCC, cv.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         cap.set(cv.CAP_PROP_FRAME_WIDTH, 1280)
         cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
         cap.set(cv.CAP_PROP_FPS, 20)
@@ -55,7 +56,7 @@ def networkConnect() -> any:
             cond.wait()
     return nt
 
-def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
+def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, fps, time):
     """Pushes theta, rx, ry, ntags, and time values to the networktable. TableName should be the CameraID"""
     if networkinstance is None:
         return
@@ -64,14 +65,15 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
     table.putNumber("rx", rx)
     table.putNumber("ry", ry)
     table.putNumber("ntags", ntags)
+    table.putNumber("fps", fps)
     table.putNumber("time", time)
 
-def logPose(camid, rx, ry, rt, time, path=constants.LOG_PATH):
+def logPose(camid, rx, ry, rt, fps, time, path=constants.LOG_PATH):
     """Logs camid, rx, ry, rt, and time of a pose."""
     with open(path, "a+", newline="") as log:
         c = csv.writer(log)
         c.writerow(
-            [camid, rx, ry, rt, time]
+            [camid, rx, ry, rt, fps, time]
         )
 
 def log(s:str):
@@ -144,7 +146,7 @@ def getPose(frame, cmtx, dist, detector, cameraid):
                 #cornerpoints.append([cx, cy])
 
                 """Updating objectpoints and cornerpoints lists."""
-                for coord in constants.ID_POS[detection.tag_id]:
+                for coord in constants.ID_TESTING_POS[detection.tag_id]:
                     objectpoints.append(coord)
                 
                 margins.append(detection.decision_margin)

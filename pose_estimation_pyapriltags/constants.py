@@ -59,21 +59,21 @@ CAMERA_CONSTANTS = {
     },
     4: {
         "matrix":np.array([
-        [8.3032651252814117e+02, 0.0, 6.3287687153719173e+02],
-        [0.0, 8.3032651252814117e+02, 4.2247754245647945e+02],
+        [1.0382727994430029e+03, 0.0, 6.1363289882878155e+02],
+        [0.0, 1.0382727994430029e+03, 3.8674113105518546e+02],
         [0.0, 0.0, 1.0]
         ]),
         "distortion":np.array([
             [
-            -3.4388726691113503e-01,
-            1.5036501773752539e-01,
+            -4.3350998251520023e-01,
+            2.5941168966059303e-01,
             0,
             0,
-            -3.6869412893688829e-02
+            -9.7424441507753048e-02
             ]
         ]),
-        "yc": 0.3175,
-        "xc": -.2667, #.145 for kitbot, -.105 for duckbot
+        "yc": 0,
+        "xc": 0, #.145 for kitbot, -.105 for duckbot
         "thetar": 0
     },
     6: {
@@ -130,7 +130,7 @@ CAMERA_CONSTANTS = {
             ]
         ]),
         "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0.32885, #X coordinate to center of robot. (meters I believe)
+        "xc": 0, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     }
 }

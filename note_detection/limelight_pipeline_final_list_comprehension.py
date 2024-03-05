@@ -190,7 +190,7 @@ def closestNote(contours, distances, angles, ellipses):
         contour = contours[i]
         distance = distances[i]
         
-        if distance == 0: sizeDistance = 639639639
+        if distance == 0: sizeDistance = 0
         else: sizeDistance = cv2.contourArea(contour) / distance
         if sizeDistance > maxNote:
             maxNote = sizeDistance

@@ -39,20 +39,11 @@ ACCEPTED_ERROR_D_MAX = 0.4
 
 # HELPER FUNCTIONS
 
-def polarToRectangular(rs, thetas):
+def polarToRectangular(r, theta):
     """Converts the given polar coordinates (r, theta) into rectangular coordinates (x, y)."""
-    xs = []
-    ys = []
-    for i in range(len(rs)):
-        r = rs[i]
-        theta = thetas[i]
-
-        x = r * math.cos(theta)
-        y = r * math.sin(theta)
-
-        xs.append(x)
-        ys.append(y)
-    return xs, ys
+    x = r * math.cos(theta)
+    y = r * math.sin(theta)
+    return x, y
 
 def getOpticalAngle(img, orientation:int, coordinate:tuple):
     """
@@ -93,16 +84,20 @@ def verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle):
 
 def processImage(image):
     """The main image processing function, returns the image with things drawn on it, the mask, and the X and Z coorinates of notes found."""
-    convexHull, mask = findNoteContours(image)
-    ellipses, convexHull = fitEllipsesToNotes(convexHull)
+    convexHulls, mask = findNoteContours(image)
+    ellipses, convexHulls = zip(*[fitEllipsesToNotes(convexHull) for convexHull in convexHulls])
+    # If an ellipse could not be fit, ellipses and convexHulls will both contain one or more Nones
+    ellipses = list(filter(lambda item: item is not None, ellipses))
+    convexHulls = list(filter(lambda item: item is not None, convexHulls))
     centers = [ellipse[0] for ellipse in ellipses]
-    distances2, groundAngles = computeNoteCoordsFromCenters(centers, image)
-    convexHull, distances2, groundAngles, ellipses = closestNote(convexHull, distances2, groundAngles, ellipses)
-    xCoords, zCoords = polarToRectangular(distances2, groundAngles)
+
+    distances2, groundAngles = zip(*[computeNoteCoordsFromCenter(center, image) for center in centers])
+    convexHulls, distances2, groundAngles, ellipses = closestNote(convexHulls, distances2, groundAngles, ellipses)
+    xCoords, zCoords = zip(*[polarToRectangular(distances2[i], groundAngles[i]) for i in range(len(ellipses))])
 
     displayText = [str(round(xCoords[i], 1)) + ", " + str(round(zCoords[i], 1)) for i in range(len(ellipses))] # X coord, Z coord
     toDisplay = drawEllipses(ellipses, displayText, image)
-    toDisplay = cv2.drawContours(toDisplay, convexHull, -1, (0, 0, 255), 2)
+    toDisplay = cv2.drawContours(toDisplay, convexHulls, -1, (0, 0, 255), 2)
 
     # If xCoords and zCoords are empty, 0 will be pushed to NetworkTables for both
     xCoords.append(0)
@@ -137,21 +132,15 @@ def findNoteContours(image):
 
 def fitEllipsesToNotes(convexHull):
     """Given a list of contours, finds ellipses that represent the center circles of notes, also returns the contours that could have ellipses fit to them."""
-    ellipses = []
-    passedHulls = []
-    for hull in convexHull:
-        if len(hull) < 5: continue # fitEllipse needs at least 5 points
+    if len(convexHull) < 5: return None, None # fitEllipse needs at least 5 points
 
-        ellipse = cv2.fitEllipse(hull)
-        newMajor = ellipse[1][1] * (1 - NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN) # Shrink the ellipse to be at roughly the center of the torus
-        newMinor = ellipse[1][0] - ellipse[1][1] * NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN # Removing the same amount from the minor axis as the major axis
-        ellipse = list(ellipse) # Tuples must be converted to lists to edit their contents
-        ellipse[1] = (newMinor, newMajor)
-        ellipse = tuple(ellipse)
-
-        ellipses.append(ellipse)
-        passedHulls.append(hull)
-    return ellipses, passedHulls
+    ellipse = cv2.fitEllipse(convexHull)
+    newMajor = ellipse[1][1] * (1 - NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN) # Shrink the ellipse to be at roughly the center of the torus
+    newMinor = ellipse[1][0] - ellipse[1][1] * NOTE_THICKNESS_IN / NOTE_OUTER_RADIUS_IN # Removing the same amount from the minor axis as the major axis
+    ellipse = list(ellipse) # Tuples must be converted to lists to edit their contents
+    ellipse[1] = (newMinor, newMajor)
+    ellipse = tuple(ellipse)
+    return ellipse, convexHull
 
 def drawEllipses(ellipses, textToDisplay, image):
     """Displays the inputted array of ellipses on image with textToDisplay (an array of the same length) at their centers."""
@@ -173,38 +162,23 @@ def drawEllipses(ellipses, textToDisplay, image):
 
 # POS MATH
 
-def computeNoteCoordsFromCenters(centers, image):
+def computeNoteCoordsFromCenter(vertex, image):
     """Uses the center point of a note to calculate its z-coordinate based on the tilt of the camera, assuming it is on the floor and the center point is below the camera."""
-    distances = []
-    angles = []
-    for vertex in centers:
-        # Some code from 2022
-        opticalHorizontalAngle = getOpticalAngle(image, 0, vertex) # if vertex is not None else getOpticalAngle(image, 0, centers[0])
-        groundHorizontalAngle = horizontalOpticalToGround(opticalHorizontalAngle)
-        opticalVerticalAngle = getOpticalAngle(image, 1, vertex) # if vertex is not None else getOpticalAngle(image, 1, centers[0])
-        groundVerticalAngle = verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle)
+    # Some code from 2022
+    opticalHorizontalAngle = getOpticalAngle(image, 0, vertex) # if vertex is not None else getOpticalAngle(image, 0, centers[0])
+    groundHorizontalAngle = horizontalOpticalToGround(opticalHorizontalAngle)
+    opticalVerticalAngle = getOpticalAngle(image, 1, vertex) # if vertex is not None else getOpticalAngle(image, 1, centers[0])
+    groundVerticalAngle = verticalOpticalToGround(opticalHorizontalAngle, opticalVerticalAngle)
 
-        horizontalDistance = getHorizontalDistance(groundVerticalAngle)
-        groundHorizontalAngle = math.pi / 2 - groundHorizontalAngle # Convert from angle from center to angle from X-axis
+    horizontalDistance = getHorizontalDistance(groundVerticalAngle)
+    groundHorizontalAngle = math.pi / 2 - groundHorizontalAngle # Convert from angle from center to angle from X-axis
+    return horizontalDistance, groundHorizontalAngle
 
-        distances.append(horizontalDistance)
-        angles.append(groundHorizontalAngle)
-    return distances, angles
-
-def undoError(givenXs, givenZs):
+def undoError(givenX, givenZ):
     """Uses the given X and Z and the error of the given X and Z, adjusts for the error of the functions. We're too good for this, though ;)."""
-    adjustedXs = []
-    adjustedZs = []
-    for i in range(len(givenXs)):
-        givenX = givenXs[i]
-        givenZ = givenZs[i]
-
-        adjustedX = (givenX - X_ERROR_B) / X_ERROR_M
-        adjustedZ = (givenZ - Z_ERROR_B) / Z_ERROR_M
-
-        adjustedXs.append(adjustedX)
-        adjustedZs.append(adjustedZ)
-    return adjustedXs, adjustedZs
+    adjustedX = (givenX - X_ERROR_B) / X_ERROR_M
+    adjustedZ = (givenZ - Z_ERROR_B) / Z_ERROR_M
+    return adjustedX, adjustedZ
 
 def closestNote(contours, distances, angles, ellipses):
     """Finds the closest and biggest contour."""

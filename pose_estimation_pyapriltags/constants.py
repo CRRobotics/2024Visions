@@ -31,12 +31,9 @@ CAMERA_CONSTANTS = {
             0
             ]
         ]),
-        "yc": -0.04445, #Y coordinate to center of robot. (meters I believe)
-        "xc": -0.2667, #X coordinate to center of robot. (meters I believe)
-        "thetar": -57, # Rotation to center of robot.
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
-        "thetar": 0 # Rotation to center of robot.
+        "yc": .2965, #Y coordinate to center of robot. (meters I believe)
+        "xc": -0.0516, #X coordinate to center of robot. (meters I believe)
+        "thetar": 120 # Rotation to center of robot.
     },
     2: {
         "matrix":np.array([
@@ -53,9 +50,9 @@ CAMERA_CONSTANTS = {
             0
             ]
         ]),
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
-        "thetar": 0 # Rotation to center of robot.
+        "yc": -.1334, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0.3080, #X coordinate to center of robot. (meters I believe)
+        "thetar": -90 # Rotation to center of robot.
     },
     4: {
         "matrix":np.array([
@@ -72,9 +69,9 @@ CAMERA_CONSTANTS = {
             -9.7424441507753048e-02
             ]
         ]),
-        "yc": 0,
-        "xc": 0, #.145 for kitbot, -.105 for duckbot
-        "thetar": 0
+        "yc": .1334, #Y coordinate to center of robot. (meters I believe)
+        "xc": 0.3080, #X coordinate to center of robot. (meters I believe)
+        "thetar": 90
     },
     6: {
         "matrix":np.array([
@@ -91,8 +88,8 @@ CAMERA_CONSTANTS = {
             -9.9056807111481575e+00
             ]
         ]),
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0.32385, #X coordinate to center of robot. (meters I believe)
+        "yc": .3175, #Y coordinate to center of robot. (meters I believe)
+        "xc": -.2498, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     },
     8: {
@@ -110,9 +107,9 @@ CAMERA_CONSTANTS = {
             1.0906274055285740e-01
             ]
         ]),
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
-        "thetar": 0 # Rotation to center of robot.
+        "yc": -.2965, #Y coordinate to center of robot. (meters I believe)
+        "xc": -0.0516, #X coordinate to center of robot. (meters I believe)
+        "thetar": -120 # Rotation to center of robot.
     },
     10: {
         "matrix":np.array([
@@ -129,8 +126,8 @@ CAMERA_CONSTANTS = {
             2.0901589583073917e-02
             ]
         ]),
-        "yc": 0, #Y coordinate to center of robot. (meters I believe)
-        "xc": 0, #X coordinate to center of robot. (meters I believe)
+        "yc": -.3175, #Y coordinate to center of robot. (meters I believe)
+        "xc": -.2498, #X coordinate to center of robot. (meters I believe)
         "thetar": 0 # Rotation to center of robot.
     }
 }

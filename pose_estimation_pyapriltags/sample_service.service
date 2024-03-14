@@ -1,0 +1,10 @@
+[Unit]
+Description="Vision Process"
+
+[Service]
+User=crr
+WorkingDirectory=/home/crr/2024Visions
+ExecStart = /bin/python3 /home/crr/2024Visions/pose_estimation_pyapriltags.py
+
+[Install]
+WantedBy=multi-user.target

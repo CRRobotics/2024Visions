@@ -33,29 +33,31 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
         if framecount % 100 ==0 :
             framecount = 0
             prev_time = current_time
+
+        robotheta = 63900
+        rx = 63900
+        ry = 63900
+        ntags = 0
+        margins = []
+
+        if success:
+            pose_calc = getFullPose(frame1, cammat, distco, detector, cameraid)
+            if pose_calc:
+                robotheta = pose_calc["angle"]
+                rx, ry, _ = pose_calc["pos"]
+                ntags = pose_calc["ntags"]
+                tags = pose_calc["tags"]
+                margins = pose_calc["margins"]
+                
+        logPose(cameraid, rx, ry, math.degrees(robotheta), ntags, tags, margins, current_time, constants.LOG_PATH)
+        pushval(nt, f"{cameraid}", robotheta, rx, ry, ntags, tags, margins current_time)
+        mainThreadLog[cameraid] = [rx, ry, robotheta, ntags]
+        cv.imwrite(f"frames/cam{cameraid}/{current_time}.png", frame1)
+
         if not success:
-            robotheta = 63900
-            rx = 63900
-            ry = 63900
-            tags = 0
-            logPose(cameraid, rx, ry, math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
             print("failed to get image from camid ", cameraid)
             cap.release()
             cap = waitForCam(path)
-            continue
-
-        pose_calc = getFullPose(frame1, cammat, distco, detector, cameraid)
-        if pose_calc:
-            robotheta = pose_calc["angle"]
-            rx, ry, _ = pose_calc["pos"]
-            tags = pose_calc["tags"]
-            logPose(cameraid, rx, ry,  math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
-            cv.imwrite(f"frames/cam{cameraid}/{current_time}.png", frame1)
-
 
         if (not headless) and show_select: 
             cv.putText(frame1, "fps:%.2f"%(fps), (1200, 600), cv.FONT_HERSHEY_SIMPLEX, .5, (255,0, 255))

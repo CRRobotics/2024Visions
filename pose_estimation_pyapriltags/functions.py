@@ -69,12 +69,12 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, tags, margins,
     table.putNumberArray("margins", margins)
     table.putNumber("time", time)
 
-def logPose(camid, rx, ry, rt, time, path=constants.LOG_PATH):
+def logPose(camid, rx, ry, rt, ntags, tags, margins, time, path=constants.LOG_PATH):
     """Logs camid, rx, ry, rt, and time of a pose."""
     with open(path, "a+", newline="") as log:
         c = csv.writer(log)
         c.writerow(
-            [camid, rx, ry, rt, time]
+            [camid, rx, ry, rt, ntags, tags, margins, time]
         )
 
 def log(s:str):

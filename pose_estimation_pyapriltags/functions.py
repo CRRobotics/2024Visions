@@ -56,7 +56,7 @@ def networkConnect() -> any:
             cond.wait()
     return nt
 
-def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, fps, time):
+def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
     """Pushes theta, rx, ry, ntags, and time values to the networktable. TableName should be the CameraID"""
     if networkinstance is None:
         return
@@ -65,15 +65,14 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, fps, time):
     table.putNumber("rx", rx)
     table.putNumber("ry", ry)
     table.putNumber("ntags", ntags)
-    table.putNumber("fps", fps)
     table.putNumber("time", time)
 
-def logPose(camid, rx, ry, rt, fps, time, path=constants.LOG_PATH):
+def logPose(camid, rx, ry, rt, time, path=constants.LOG_PATH):
     """Logs camid, rx, ry, rt, and time of a pose."""
     with open(path, "a+", newline="") as log:
         c = csv.writer(log)
         c.writerow(
-            [camid, rx, ry, rt, fps, time]
+            [camid, rx, ry, rt, time]
         )
 
 def log(s:str):
@@ -82,8 +81,6 @@ def log(s:str):
         c.writerow(
             [s]
         )
-
-
 
 """APRILTAG FUNCTIONS -----------------------------------"""
 def getDetector():
@@ -111,14 +108,47 @@ def allGoodCorners(l:list, framewidth:int, frameheight:int, margin:int) -> bool:
             return False
     return True
 
-def getPose(frame, cmtx, dist, detector, cameraid):
+def getTagPose(objectpoints:list, cornerpoints:list, cmtx, dist):
+
+    mmat, rvec, tvec = cv.solvePnP(
+        np.array(objectpoints), 
+        np.array(cornerpoints),
+        cmtx,
+        dist,  
+        )
+
+    tvec = (np.array(tvec))
+    rvec = (np.array(rvec))   
+
+    rotationmatrix, _ = cv.Rodrigues(rvec)
+
+    "GETTING THE COORDINATES OF CAMERA"
+    final_coords = np.dot(-rotationmatrix.T, tvec)#Multiply the negative inverse of the rotations to the translation vector. 
+
+
+    "GETTING THE ZTHETA (yaw of CAMERA on ground)"
+    pointCoords = np.dot(rotationmatrix.T, np.array([[1],[0],[0]])) # Get coordinates of rotated point on unit sphere. We want to project it onto the x-y axis
+    pointX, pointY = [pointCoords[0][0], pointCoords[1][0]]
+
+    # Signs of x and y coordinates on unit circle
+    sx = 1 if pointX <= 0 else -1
+    sy = 1 if pointY <= 0 else -1
+    # # Modify theta based on coordinate quadrant to compensate for arctan only going from -90 to 90
+    ztheta = math.degrees(math.atan(pointCoords[1][0]/pointCoords[0][0])) + (180*sy)*(sx - 1)/(-2)
+    ztheta -= 90
+    if ztheta < 0: ztheta += 360
+
+
+    px, py, pz = final_coords
+
+    return px, py, pz, ztheta
+
+
+def getFullPose(frame, cmtx, dist, detector, cameraid):
     """Calculates and returns the pose given an intrinsiz camera matrix, distortion coefficients, a frame, detector, and camera ID. """
     detections = getDetections(detector,frame)
 
     h, w, _ = frame.shape
-
-    toreturn = {
-    }
 
     if detections:
         objectpoints = []
@@ -127,79 +157,39 @@ def getPose(frame, cmtx, dist, detector, cameraid):
         margins = []
 
         for detection in detections:
-
             if detection.tag_id in range(1, 17) and len(detection.corners) == 4 and detection.decision_margin > constants.MARGIN_THRESHOLD and allGoodCorners(detection.corners, w, h, constants.PIXEL_MARGIN):
-                tagcounter += 1
 
+                tagcounter += 1
                 corner_counter = 1
                 for x, y in detection.corners:
                     corner = (int(x), int(y))
                     cv.putText(frame, f"{corner_counter}", corner, cv.FONT_HERSHEY_SIMPLEX, 1, (0,255, 0))
                     cv.circle(frame, corner, 3, (255,0,0), -1)
-                    corner_counter += 1
                     cornerpoints.append([x, y])
+                    corner_counter += 1
 
-                """Drawing corners"""
+                objectpoints += constants.ID_POS[detection.tag_id]
+                margins.append(detection.decision_margin)
+
                 cx, cy = detection.center
                 cv.circle(frame, (int(cx), int(cy)), 3, (0, 0, 255), -1)
                 cv.putText(frame, "id: %s, %.2f"%(detection.tag_id, detection.decision_margin), (int(cx), int(cy) + 20), cv.FONT_HERSHEY_SIMPLEX, .5, (255,0, 255))
-                #cornerpoints.append([cx, cy])
-
-                """Updating objectpoints and cornerpoints lists."""
-                for coord in constants.ID_TESTING_POS[detection.tag_id]:
-                    objectpoints.append(coord)
-                
-                margins.append(detection.decision_margin)
 
         if objectpoints and cornerpoints:
-            objectpoints = np.array(objectpoints)
-            cornerpoints = np.array(cornerpoints)
-
-
-
-            mmat, rvec, tvec = cv.solvePnP(
-                objectpoints, 
-                cornerpoints,
-                cmtx,
-                dist,  
-                )
-
-            tvec = (np.array(tvec))
-            rvec = (np.array(rvec))   
-
-            rotationmatrix, _ = cv.Rodrigues(rvec)
-
-            "GETTING THE COORDINATES OF CAMERA"
-            final_coords = np.dot(-rotationmatrix.T, tvec)#Multiply the negative inverse of the rotations to the translation vector. 
-
-
-            "GETTING THE ZTHETA (yaw of CAMERA on ground)"
-            pointCoords = np.dot(rotationmatrix.T, np.array([[1],[0],[0]])) # Get coordinates of rotated point on unit sphere. We want to project it onto the x-y axis
-            pointX, pointY = [pointCoords[0][0], pointCoords[1][0]]
-
-            # Signs of x and y coordinates on unit circle
-            sx = 1 if pointX <= 0 else -1
-            sy = 1 if pointY <= 0 else -1
-            # # Modify theta based on coordinate quadrant to compensate for arctan only going from -90 to 90
-            ztheta = math.degrees(math.atan(pointCoords[1][0]/pointCoords[0][0])) + (180*sy)*(sx - 1)/(-2)
-            ztheta -= 90
-            if ztheta < 0: ztheta += 360
-
-
-            px, py, pz = final_coords
-
+            px, py, pz, ztheta = getTagPose(objectpoints, cornerpoints, cmtx, dist)
             robocoords, robotheta = getRobotVals(ztheta, cameraid, px, py)#Transform back to pose of robot
 
-            toreturn["pos"] = robocoords
-            toreturn["angle"] = robotheta
-            toreturn["tags"] = tagcounter
-            toreturn["margins"] = margins
             rx, ry, _ = robocoords
 
             cv.putText(frame, " PX: %.4f  PY: %.4f  PZ: %.4f"%(px, py, pz), (50, 100), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
             cv.putText(frame, " ZTHETA: %.4f"%(ztheta), (50, 50), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
             cv.putText(frame, " RX: %.4f  RY: %.4f RTHETA: %.4f"%(rx, ry, math.degrees(robotheta)), (50, 150), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 255), 2)
-            return toreturn
+            return {
+                "pos":robocoords,
+                "angle":robotheta,
+                "tags":tagcounter,
+                "margins":margins
+            }
 
     """IF DOES NOT DETECT ANYTHING, RETURN PLACEHOLDER"""
     return {

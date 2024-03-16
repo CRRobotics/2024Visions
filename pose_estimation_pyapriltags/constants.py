@@ -1,7 +1,7 @@
 import numpy as np
 
 TAG_FAMILY = "tag36h11"
-MARGIN_THRESHOLD = 40
+MARGIN_THRESHOLD = 82
 DECODE_SHARPENING=.25
 REFINE_EDGES=1
 QUAD_DECIMATE = 1
@@ -33,7 +33,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": -.2965, #Y coordinate to center of robot. (meters I believe)
         "xc": -0.0516, #X coordinate to center of robot. (meters I believe)
-        "thetar": 60 # Rotation to center of robot.
+        "thetar": 60,
     },
     2: {
         "matrix":np.array([
@@ -52,7 +52,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": .1334, #Y coordinate to center of robot. (meters I believe)
         "xc": -0.3080, #X coordinate to center of robot. (meters I believe)
-        "thetar": -90 # Rotation to center of robot.
+        "thetar": -90, # Rotation to center of robot.
     },
     4: {
         "matrix":np.array([
@@ -71,7 +71,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": -.1334, #Y coordinate to center of robot. (meters I believe)
         "xc": -0.3080, #X coordinate to center of robot. (meters I believe)
-        "thetar": 90
+        "thetar": 90,
     },
     6: {
         "matrix":np.array([
@@ -90,7 +90,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": -.3175, #Y coordinate to center of robot. (meters I believe)
         "xc": -.2469, #X coordinate to center of robot. (meters I believe)
-        "thetar": 180 # Rotation to center of robot.
+        "thetar": 180, # Rotation to center of robot.
     },
     8: {
         "matrix":np.array([
@@ -109,7 +109,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": .2965, #Y coordinate to center of robot. (meters I believe)
         "xc": -0.0516, #X coordinate to center of robot. (meters I believe)
-        "thetar": -60 # Rotation to center of robot.
+        "thetar": -60, # Rotation to center of robot.
     },
     10: {
         "matrix":np.array([
@@ -128,7 +128,7 @@ CAMERA_CONSTANTS = {
         ]),
         "yc": .3175, #Y coordinate to center of robot. (meters I believe)
         "xc": -.2469, #X coordinate to center of robot. (meters I believe)
-        "thetar": 180 # Rotation to center of robot.
+        "thetar": 180, # Rotation to center of robot.
     }
 }
 

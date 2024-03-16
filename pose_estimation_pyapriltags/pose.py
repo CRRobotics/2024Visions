@@ -39,21 +39,22 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
             ry = 63900
             tags = 0
             logPose(cameraid, rx, ry, math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, fps, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, tags, fps]
+            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
+            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
             print("failed to get image from camid ", cameraid)
             cap.release()
             cap = waitForCam(path)
             continue
-        # frame1 = cv.blur(frame1, (2,2))
-        pose_calc = getPose(frame1, cammat, distco, detector, cameraid)
+
+        pose_calc = getFullPose(frame1, cammat, distco, detector, cameraid)
         if pose_calc:
             robotheta = pose_calc["angle"]
             rx, ry, _ = pose_calc["pos"]
             tags = pose_calc["tags"]
             logPose(cameraid, rx, ry,  math.degrees(robotheta), fps, current_time, constants.ALT_LOG_PATH)
-            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, fps, current_time)
-            mainThreadLog[cameraid] = [rx, ry, robotheta, fps, tags]
+            pushval(nt, f"{cameraid}", robotheta, rx, ry, tags, current_time)
+            mainThreadLog[cameraid] = [rx, ry, robotheta, tags]
+            cv.imwrite(f"frames/cam{cameraid}/{current_time}.png", frame1)
 
 
         if (not headless) and show_select: 

@@ -56,7 +56,7 @@ def networkConnect() -> any:
             cond.wait()
     return nt
 
-def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
+def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, tags, margins, time):
     """Pushes theta, rx, ry, ntags, and time values to the networktable. TableName should be the CameraID"""
     if networkinstance is None:
         return
@@ -65,6 +65,8 @@ def pushval(networkinstance, tablename:str, theta, rx, ry, ntags, time):
     table.putNumber("rx", rx)
     table.putNumber("ry", ry)
     table.putNumber("ntags", ntags)
+    table.putNumberArray("tags", tags)
+    table.putNumberArray("margins", margins)
     table.putNumber("time", time)
 
 def logPose(camid, rx, ry, rt, time, path=constants.LOG_PATH):
@@ -155,6 +157,7 @@ def getFullPose(frame, cmtx, dist, detector, cameraid):
         cornerpoints = []
         tagcounter = 0
         margins = []
+        tags = []
 
         for detection in detections:
             if detection.tag_id in range(1, 17) and len(detection.corners) == 4 and detection.decision_margin > constants.MARGIN_THRESHOLD and allGoodCorners(detection.corners, w, h, constants.PIXEL_MARGIN):
@@ -170,6 +173,7 @@ def getFullPose(frame, cmtx, dist, detector, cameraid):
 
                 objectpoints += constants.ID_POS[detection.tag_id]
                 margins.append(detection.decision_margin)
+                tags.append(detection.tag_id)
 
                 cx, cy = detection.center
                 cv.circle(frame, (int(cx), int(cy)), 3, (0, 0, 255), -1)
@@ -187,7 +191,8 @@ def getFullPose(frame, cmtx, dist, detector, cameraid):
             return {
                 "pos":robocoords,
                 "angle":robotheta,
-                "tags":tagcounter,
+                "ntags":tagcounter,
+                "tags":tags,
                 "margins":margins
             }
 
@@ -195,8 +200,9 @@ def getFullPose(frame, cmtx, dist, detector, cameraid):
     return {
         "pos": (63900,63900,63900),
         "angle":63900,
-        "tags":0,
-        "margins":0
+        "ntags":0,
+        "tags":[],
+        "margins":[]
     }
 
 def getRobotVals(ay, cameraid, px, py):

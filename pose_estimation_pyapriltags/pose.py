@@ -50,7 +50,7 @@ def process_frame(cameraid, path, nt, headless = False, show_select = False, mai
                 margins = pose_calc["margins"]
                 
         logPose(cameraid, rx, ry, math.degrees(robotheta), ntags, tags, margins, current_time, constants.LOG_PATH)
-        pushval(nt, f"{cameraid}", robotheta, rx, ry, ntags, tags, margins current_time)
+        pushval(nt, f"{cameraid}", robotheta, rx, ry, ntags, tags, margins, current_time)
         mainThreadLog[cameraid] = [rx, ry, robotheta, ntags]
         cv.imwrite(f"frames/cam{cameraid}/{current_time}.png", frame1)
 
